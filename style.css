@@ -662,7 +662,11 @@ body {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: 16px 24px 80px 24px;
+    /* Ensure scrollbar renders INSIDE the column, not on the border edge */
+    box-sizing: border-box;
+    width: 100%;
 }
 
 /* Accordion Component */
@@ -1025,6 +1029,15 @@ body {
     gap: 16px;
     box-shadow: 0 -4px 10px rgba(0,0,0,0.03);
     z-index: 10;
+    flex-shrink: 0;
+    /* Horizontal scroll so buttons are always accessible on narrow screens */
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.downloader-bar .btn {
+    flex-shrink: 0;
 }
 
 /* ==========================================================================

@@ -1521,13 +1521,14 @@ function renderWarmSlateTemplate(container) {
 }
 
 // ==========================================================================
-// PDF EXPORT — FIXED IMPLEMENTATION
+// PDF EXPORT
 //
-// Uses html2pdf.js (already bundled in the project) directly on a clean
-// off-screen clone of the CV element. This avoids:
-//   - iframe onload race conditions (old approach)
-//   - html2canvas failing on CSS transform:scale() elements (old approach)
-//   - jsPDF constructor path issues across bundle versions (old approach)
+// KEY INSIGHT from working reference project:
+//   - Capture the LIVE element directly (no clone needed)
+//   - Temporarily set transform to 'none' so html2canvas sees full 794px width
+//   - Restore transform in .then() and .catch()
+//   - Do NOT use scrollX/scrollY or windowWidth overrides — they confuse
+//     html2canvas when the element is already at its natural size
 // ==========================================================================
 function setupExportHandlers() {
     document.getElementById('btn-download-pdf').addEventListener('click', () => {
@@ -1537,6 +1538,8 @@ function setupExportHandlers() {
 
 function downloadPDF() {
     const btnPdf = document.getElementById('btn-download-pdf');
+    const docElement = document.getElementById('cv-preview-document');
+    const scaleWrapper = document.querySelector('.cv-scale-wrapper');
     const fullName = cvState.fullName || 'craftcv_resume';
     const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
 
@@ -1544,73 +1547,44 @@ function downloadPDF() {
     btnPdf.disabled = true;
     btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 
-    // Clone the live CV preview element so we can strip transforms safely
-    const cvEl = document.getElementById('cv-preview-document');
-    const clone = cvEl.cloneNode(true);
+    // Save current transform and remove it so html2canvas
+    // captures the element at its real 794px width, not a scaled version
+    const originalTransform = scaleWrapper.style.transform;
+    scaleWrapper.style.transform = 'none';
 
-    // Position the clone off-screen but still rendered (not display:none)
-    // so html2canvas can measure and capture it correctly
-    clone.style.cssText = `
-        position: fixed !important;
-        top: 0 !important;
-        left: -9999px !important;
-        width: 794px !important;
-        min-height: 1123px !important;
-        background: #ffffff !important;
-        box-shadow: none !important;
-        transform: none !important;
-        overflow: visible !important;
-        z-index: -9999 !important;
-        pointer-events: none !important;
-    `;
+    const opt = {
+        margin: 0,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            backgroundColor: '#ffffff',
+            logging: false
+        },
+        jsPDF: {
+            unit: 'mm',
+            format: 'a4',
+            orientation: 'portrait'
+        }
+    };
 
-    document.body.appendChild(clone);
-
-    // Give the browser one paint cycle to render the clone before capturing
-    requestAnimationFrame(() => {
-        setTimeout(() => {
-            const opt = {
-                margin: 0,
-                filename: filename,
-                image: { type: 'jpeg', quality: 0.97 },
-                html2canvas: {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    backgroundColor: '#ffffff',
-                    width: 794,
-                    windowWidth: 794,
-                    logging: false,
-                    // Scroll offsets must be 0 for the off-screen clone
-                    scrollX: 0,
-                    scrollY: 0
-                },
-                jsPDF: {
-                    unit: 'mm',
-                    format: 'a4',
-                    orientation: 'portrait'
-                },
-                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-            };
-
-            html2pdf()
-                .set(opt)
-                .from(clone)
-                .save()
-                .then(() => {
-                    document.body.removeChild(clone);
-                    resetButton(btnPdf);
-                })
-                .catch(err => {
-                    console.error('PDF generation failed:', err);
-                    if (document.body.contains(clone)) {
-                        document.body.removeChild(clone);
-                    }
-                    alert('PDF generation failed. Please try again.');
-                    resetButton(btnPdf);
-                });
-        }, 300);
-    });
+    html2pdf()
+        .from(docElement)
+        .set(opt)
+        .save()
+        .then(() => {
+            // Restore the zoom transform after successful export
+            scaleWrapper.style.transform = originalTransform;
+            resetButton(btnPdf);
+        })
+        .catch(err => {
+            console.error('PDF export failed:', err);
+            scaleWrapper.style.transform = originalTransform;
+            alert('PDF generation failed. Please try again.');
+            resetButton(btnPdf);
+        });
 }
 
 function resetButton(btn) {

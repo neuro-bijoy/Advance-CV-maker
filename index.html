@@ -14,9 +14,8 @@
     <!-- FontAwesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- App Stylesheets -->
+    <!-- App Stylesheet -->
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <!-- Top Navigation Bar -->
@@ -40,10 +39,8 @@
 
     <!-- Main Workspace Views -->
     <main class="app-main">
-        
-        <!-- VIEW 1: HOME PAGE / LANDING VIEW -->
+        <!-- VIEW 1: HOME PAGE -->
         <section id="view-home" class="view-section active-view">
-            <!-- Hero Banner -->
             <div class="hero-section">
                 <div class="hero-content">
                     <span class="badge-new">Recruiter-Approved Layouts</span>
@@ -60,7 +57,6 @@
                 </div>
             </div>
 
-            <!-- Features Grid -->
             <div class="features-section">
                 <div class="section-title">
                     <h2>Why Choose CraftCV?</h2>
@@ -75,7 +71,7 @@
                     <div class="feature-card">
                         <i class="fa-solid fa-download feature-icon"></i>
                         <h3>PDF Export</h3>
-                        <p>Download your resume as a clean, professional PDF — works on both desktop and mobile.</p>
+                        <p>Download your resume as a clean, professional PDF.</p>
                     </div>
                     <div class="feature-card">
                         <i class="fa-solid fa-eye-slash feature-icon"></i>
@@ -85,14 +81,12 @@
                 </div>
             </div>
 
-            <!-- Template Selection Section -->
             <div id="templates" class="templates-section">
                 <div class="section-title">
                     <h2>Select Your Template</h2>
                     <p>Select a design structure to start editing. You can easily switch templates later without losing your entered data.</p>
                 </div>
                 <div class="templates-grid">
-                    <!-- Template 1 Card -->
                     <div class="template-card" data-template="classic-executive">
                         <div class="template-card-preview">
                             <div class="mini-template classic-preview">
@@ -114,11 +108,10 @@
                         <div class="template-card-info">
                             <h3>Classic Executive</h3>
                             <span class="template-badge">Recruiter Choice</span>
-                            <p>Timeless split-column layout with a professional dark slate sidebar. Perfect for traditional industries.</p>
+                            <p>Timeless split-column layout with a professional dark slate sidebar.</p>
                         </div>
                     </div>
 
-                    <!-- Template 2 Card -->
                     <div class="template-card" data-template="elegant-minimalist">
                         <div class="template-card-preview">
                             <div class="mini-template minimalist-preview">
@@ -137,11 +130,10 @@
                         <div class="template-card-info">
                             <h3>Elegant Minimalist</h3>
                             <span class="template-badge">Clean & Modern</span>
-                            <p>Clean single-column style featuring editorial serif headings and gold/emerald accents. Great for academics.</p>
+                            <p>Clean single-column style featuring editorial serif headings.</p>
                         </div>
                     </div>
 
-                    <!-- Template 3 Card -->
                     <div class="template-card" data-template="creative-tech">
                         <div class="template-card-preview">
                             <div class="mini-template creative-preview">
@@ -163,11 +155,10 @@
                         <div class="template-card-info">
                             <h3>Creative Tech</h3>
                             <span class="template-badge">Modern & Tech</span>
-                            <p>Dynamic design with a gradient header banner, overlapping photo, and modern skill badges. Ideal for IT and design.</p>
+                            <p>Dynamic design with gradient header and modern skill badges.</p>
                         </div>
                     </div>
 
-                    <!-- Template 4 Card -->
                     <div class="template-card" data-template="warm-slate">
                         <div class="template-card-preview">
                             <div class="mini-template slate-preview">
@@ -185,19 +176,16 @@
                         <div class="template-card-info">
                             <h3>Warm Slate</h3>
                             <span class="template-badge">Corporate Sleek</span>
-                            <p>Stylish double-sided layout with clean sans-serif typography and warm charcoal dividing elements.</p>
+                            <p>Stylish double-sided layout with clean sans-serif typography.</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-
-        <!-- VIEW 2: BUILDER WORKSPACE VIEW -->
+        <!-- VIEW 2: BUILDER WORKSPACE -->
         <section id="view-editor" class="view-section">
             <div class="editor-workspace">
-                
-                <!-- LEFT COLUMN: FORM DETAILS EDITOR -->
                 <div class="editor-column">
                     <div class="editor-header">
                         <h2><i class="fa-solid fa-pen-to-square"></i> Enter CV Details</h2>
@@ -205,8 +193,6 @@
                     </div>
 
                     <form id="cv-form" class="editor-form" autocomplete="off" onsubmit="event.preventDefault();">
-                        
-                        <!-- Personal Info Section -->
                         <div class="accordion-item expanded">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-user-tie"></i> Personal Information</span>
@@ -277,7 +263,6 @@
                             </div>
                         </div>
 
-                        <!-- Career Objective Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-bullseye"></i> Career Objective / Summary</span>
@@ -286,12 +271,11 @@
                             <div class="accordion-content">
                                 <div class="form-group">
                                     <label for="career-summary">Professional Summary</label>
-                                    <textarea id="career-summary" rows="5" placeholder="Motivated and results-driven software engineer with 5+ years of experience in developing robust web applications..."></textarea>
+                                    <textarea id="career-summary" rows="5" placeholder="Motivated and results-driven software engineer..."></textarea>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Technical Skills Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-laptop-code"></i> Technical Skills</span>
@@ -305,7 +289,6 @@
                             </div>
                         </div>
 
-                        <!-- Soft Skills Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-people-arrows"></i> Soft Skills</span>
@@ -319,7 +302,6 @@
                             </div>
                         </div>
 
-                        <!-- Education Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-graduation-cap"></i> Education</span>
@@ -333,7 +315,6 @@
                             </div>
                         </div>
 
-                        <!-- Work Experience Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-briefcase"></i> Work Experience</span>
@@ -347,7 +328,6 @@
                             </div>
                         </div>
 
-                        <!-- Academic Projects Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-diagram-project"></i> Academic Projects</span>
@@ -361,7 +341,6 @@
                             </div>
                         </div>
 
-                        <!-- Certifications Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-certificate"></i> Certifications</span>
@@ -375,7 +354,6 @@
                             </div>
                         </div>
 
-                        <!-- Achievements Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-trophy"></i> Achievements</span>
@@ -389,7 +367,6 @@
                             </div>
                         </div>
 
-                        <!-- Languages Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-language"></i> Languages</span>
@@ -403,7 +380,6 @@
                             </div>
                         </div>
 
-                        <!-- Hobbies / Interests Section -->
                         <div class="accordion-item">
                             <button type="button" class="accordion-header">
                                 <span><i class="fa-solid fa-heart"></i> Hobbies & Interests</span>
@@ -416,13 +392,10 @@
                                 </button>
                             </div>
                         </div>
-
                     </form>
                 </div>
 
-                <!-- RIGHT COLUMN: LIVE CV PREVIEW -->
                 <div class="preview-column">
-                    <!-- Preview Controls Toolbar -->
                     <div class="preview-toolbar">
                         <div class="toolbar-left">
                             <span class="preview-status"><span class="pulse-dot"></span> Live Preview</span>
@@ -444,7 +417,6 @@
                         </div>
                     </div>
 
-                    <!-- CV Preview Scroll Container -->
                     <div class="preview-scroll-container">
                         <div class="cv-scale-wrapper">
                             <div id="cv-preview-document" class="cv-preview-container template-classic-executive">
@@ -453,20 +425,16 @@
                         </div>
                     </div>
 
-                    <!-- Downloader Action Bar — PDF only -->
                     <div class="downloader-bar">
                         <button id="btn-download-pdf" class="btn btn-primary btn-lg">
-                            <i class="fa-solid fa-image"></i> Download Image
+                            <i class="fa-solid fa-file-pdf"></i> Download PDF
                         </button>
                     </div>
                 </div>
-
             </div>
         </section>
-
     </main>
 
-    <!-- Footer -->
     <footer class="app-footer">
         <div class="footer-container">
             <p>&copy; 2026 CraftCV Builder. All rights reserved.</p>
@@ -474,14 +442,11 @@
         </div>
     </footer>
 
-    <!-- html2pdf bundle includes html2canvas + jsPDF -->
-    
+    <!-- Libraries for PDF download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <!-- Application Logic -->
-    <!-- html2canvas for image download -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-
-<!-- Application Logic -->
-<script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>

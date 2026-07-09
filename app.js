@@ -110,6 +110,39 @@ document.addEventListener('DOMContentLoaded', () => {
     initApp();
 });
 
+// ==========================================================================
+// SCROLL FIX: Directly set editor panel height via JS — bypasses all CSS
+// height-chain inheritance issues with flex/grid/overflow combinations.
+// ==========================================================================
+function fixEditorScrollHeight() {
+    const header = document.querySelector('.app-header');
+    const editorHeader = document.querySelector('.editor-header');
+    const editorForm = document.querySelector('.editor-form');
+    const previewToolbar = document.querySelector('.preview-toolbar');
+    const downloaderBar = document.querySelector('.downloader-bar');
+    const previewScrollContainer = document.querySelector('.preview-scroll-container');
+
+    if (!editorForm) return;
+
+    const headerH = header ? header.offsetHeight : 70;
+    const editorHeaderH = editorHeader ? editorHeader.offsetHeight : 60;
+    const availableH = window.innerHeight - headerH;
+
+    // Directly force the form height so it scrolls regardless of CSS chain
+    editorForm.style.height = (availableH - editorHeaderH) + 'px';
+    editorForm.style.maxHeight = (availableH - editorHeaderH) + 'px';
+    editorForm.style.overflowY = 'scroll';
+    editorForm.style.overflowX = 'hidden';
+
+    // Also fix preview scroll container
+    if (previewScrollContainer && previewToolbar && downloaderBar) {
+        const used = previewToolbar.offsetHeight + downloaderBar.offsetHeight;
+        previewScrollContainer.style.height = (availableH - used) + 'px';
+        previewScrollContainer.style.maxHeight = (availableH - used) + 'px';
+        previewScrollContainer.style.overflowY = 'auto';
+    }
+}
+
 function initApp() {
     setupViewNavigation();
     setupThemeToggle();
@@ -119,6 +152,10 @@ function initApp() {
     setupInputListeners();
     setupZoomControls();
     setupExportHandlers();
+
+    // Apply scroll fix immediately and on every resize
+    fixEditorScrollHeight();
+    window.addEventListener('resize', fixEditorScrollHeight);
     
     // Load from LocalStorage or show Landing Page
     const savedData = localStorage.getItem('craftcv_data');
@@ -165,6 +202,8 @@ function setupViewNavigation() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         // Recalculate zoom fitting
         fitZoomToContainer();
+        // SCROLL FIX: Recalculate editor/preview panel heights after view switch
+        setTimeout(fixEditorScrollHeight, 50);
     };
 
     btnHome.addEventListener('click', switchToHome);

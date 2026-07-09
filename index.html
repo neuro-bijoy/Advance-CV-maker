@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="CraftCV - Create professional, recruiter-ready resumes and CVs online in minutes. Beautiful templates, live preview, and easy PDF/Word download.">
+    <title>CraftCV - Professional CV Maker</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- App Stylesheets -->
+    <!-- BUG FIX: styles.css was present but never linked in the original HTML -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="logo" id="logo-home">
+                <i class="fa-solid fa-file-invoice-paragraph logo-icon"></i>
+                <span class="logo-text">Craft<span>CV</span></span>
+            </div>
+            <nav class="header-nav">
+                <button class="nav-btn active" id="nav-btn-home"><i class="fa-solid fa-house"></i> Home</button>
+                <button class="nav-btn" id="nav-btn-editor"><i class="fa-solid fa-wand-magic-sparkles"></i> Builder</button>
+            </nav>
+            <div class="header-actions">
+                <button id="theme-toggle" class="icon-btn" aria-label="Toggle Theme">
+                    <i class="fa-solid fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Views -->
+    <main class="app-main">
+        
+        <!-- VIEW 1: HOME PAGE / LANDING VIEW -->
+        <section id="view-home" class="view-section active-view">
+            <!-- Hero Banner -->
+            <div class="hero-section">
+                <div class="hero-content">
+                    <span class="badge-new">Recruiter-Approved Layouts</span>
+                    <h1>Create a Professional Resume in Minutes</h1>
+                    <p class="hero-subtitle">Build a modern, job-winning CV with our interactive builder. Stand out from the crowd and land your dream role.</p>
+                    <div class="hero-cta">
+                        <!-- BUG FIX: Was <a href="#templates"> which doesn't work when target is in an active-view section.
+                             Changed to a button with JS-powered smooth scroll. -->
+                        <button class="btn btn-primary btn-lg" onclick="document.getElementById('templates').scrollIntoView({behavior:'smooth'})">Choose a Template <i class="fa-solid fa-arrow-right"></i></button>
+                        <button class="btn btn-secondary btn-lg" id="btn-quick-start">Quick Start <i class="fa-solid fa-bolt"></i></button>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="floating-cv-card cv-card-1"></div>
+                    <div class="floating-cv-card cv-card-2"></div>
+                </div>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="features-section">
+                <div class="section-title">
+                    <h2>Why Choose CraftCV?</h2>
+                    <p>Designed to make resume building simple, elegant, and effective.</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class="fa-solid fa-eye feature-icon"></i>
+                        <h3>Live Preview</h3>
+                        <p>See changes instantly as you type. What you see is exactly what you get.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fa-solid fa-download feature-icon"></i>
+                        <h3>Multi-Format Export</h3>
+                        <p>Download your resume as an ATS-friendly PDF or editable Microsoft Word document.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class="fa-solid fa-eye-slash feature-icon"></i>
+                        <h3>Smart Hiding</h3>
+                        <p>No empty fields or placeholders. If you don't fill a section, it hides automatically.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Template Selection Section -->
+            <div id="templates" class="templates-section">
+                <div class="section-title">
+                    <h2>Select Your Template</h2>
+                    <p>Select a design structure to start editing. You can easily switch templates later without losing your entered data.</p>
+                </div>
+                <div class="templates-grid">
+                    <!-- Template 1 Card -->
+                    <div class="template-card" data-template="classic-executive">
+                        <div class="template-card-preview">
+                            <div class="mini-template classic-preview">
+                                <div class="side"></div>
+                                <div class="body">
+                                    <div class="line title"></div>
+                                    <div class="line"></div>
+                                    <div class="line"></div>
+                                    <div class="grid">
+                                        <div class="line"></div>
+                                        <div class="line"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="template-overlay">
+                                <button class="btn btn-primary btn-use-template">Use Template</button>
+                            </div>
+                        </div>
+                        <div class="template-card-info">
+                            <h3>Classic Executive</h3>
+                            <span class="template-badge">Recruiter Choice</span>
+                            <p>Timeless split-column layout with a professional dark slate sidebar. Perfect for traditional industries.</p>
+                        </div>
+                    </div>
+
+                    <!-- Template 2 Card -->
+                    <div class="template-card" data-template="elegant-minimalist">
+                        <div class="template-card-preview">
+                            <div class="mini-template minimalist-preview">
+                                <div class="body">
+                                    <div class="line center title"></div>
+                                    <div class="line center"></div>
+                                    <div class="line block"></div>
+                                    <div class="line block"></div>
+                                    <div class="line block"></div>
+                                </div>
+                            </div>
+                            <div class="template-overlay">
+                                <button class="btn btn-primary btn-use-template">Use Template</button>
+                            </div>
+                        </div>
+                        <div class="template-card-info">
+                            <h3>Elegant Minimalist</h3>
+                            <span class="template-badge">Clean & Modern</span>
+                            <p>Clean single-column style featuring editorial serif headings and gold/emerald accents. Great for academics.</p>
+                        </div>
+                    </div>
+
+                    <!-- Template 3 Card -->
+                    <div class="template-card" data-template="creative-tech">
+                        <div class="template-card-preview">
+                            <div class="mini-template creative-preview">
+                                <div class="top-header"></div>
+                                <div class="body">
+                                    <div class="line"></div>
+                                    <div class="line"></div>
+                                    <div class="grid-3">
+                                        <div class="badge"></div>
+                                        <div class="badge"></div>
+                                        <div class="badge"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="template-overlay">
+                                <button class="btn btn-primary btn-use-template">Use Template</button>
+                            </div>
+                        </div>
+                        <div class="template-card-info">
+                            <h3>Creative Tech</h3>
+                            <span class="template-badge">Modern & Tech</span>
+                            <p>Dynamic design with a gradient header banner, overlapping photo, and modern skill badges. Ideal for IT and design.</p>
+                        </div>
+                    </div>
+
+                    <!-- Template 4 Card -->
+                    <div class="template-card" data-template="warm-slate">
+                        <div class="template-card-preview">
+                            <div class="mini-template slate-preview">
+                                <div class="side-right"></div>
+                                <div class="body-left">
+                                    <div class="line title"></div>
+                                    <div class="line"></div>
+                                    <div class="line"></div>
+                                </div>
+                            </div>
+                            <div class="template-overlay">
+                                <button class="btn btn-primary btn-use-template">Use Template</button>
+                            </div>
+                        </div>
+                        <div class="template-card-info">
+                            <h3>Warm Slate</h3>
+                            <span class="template-badge">Corporate Sleek</span>
+                            <p>Stylish double-sided layout with clean sans-serif typography and warm charcoal dividing elements.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 2: BUILDER WORKSPACE VIEW -->
+        <section id="view-editor" class="view-section">
+            <div class="editor-workspace">
+                
+                <!-- LEFT COLUMN: FORM DETAILS EDITOR -->
+                <div class="editor-column">
+                    <div class="editor-header">
+                        <h2><i class="fa-solid fa-pen-to-square"></i> Enter CV Details</h2>
+                        <button class="btn-text-danger" id="btn-clear-form"><i class="fa-solid fa-rotate-left"></i> Reset Form</button>
+                    </div>
+
+                    <form id="cv-form" class="editor-form" autocomplete="off" onsubmit="event.preventDefault();">
+                        
+                        <!-- Personal Info Section -->
+                        <div class="accordion-item expanded">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-user-tie"></i> Personal Information</span>
+                                <i class="fa-solid fa-chevron-up arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="photo-upload-container">
+                                    <div class="photo-preview-box">
+                                        <img id="photo-preview-img" src="" alt="Profile Preview" class="hidden">
+                                        <i class="fa-regular fa-user" id="photo-placeholder-icon"></i>
+                                    </div>
+                                    <div class="photo-upload-actions">
+                                        <label for="profile-photo" class="btn btn-secondary btn-sm upload-label">
+                                            <i class="fa-solid fa-camera"></i> Upload Photo
+                                        </label>
+                                        <input type="file" id="profile-photo" accept="image/*" class="hidden-input">
+                                        <button type="button" id="btn-remove-photo" class="btn btn-outline btn-sm hidden">Remove</button>
+                                        <span class="upload-tip">Supports JPG, PNG. Max 2MB.</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-grid">
+                                    <div class="form-group col-span-2">
+                                        <label for="full-name" class="required-label">Full Name</label>
+                                        <input type="text" id="full-name" placeholder="John Doe" required>
+                                    </div>
+                                    <div class="form-group col-span-2">
+                                        <label for="job-title">Professional Title</label>
+                                        <input type="text" id="job-title" placeholder="Senior Software Engineer">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="phone-number">Phone Number</label>
+                                        <input type="tel" id="phone-number" placeholder="+1 (555) 000-0000">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="email-address">Email Address</label>
+                                        <input type="email" id="email-address" placeholder="john.doe@example.com">
+                                    </div>
+                                    <div class="form-group col-span-2">
+                                        <label for="street-address">Address</label>
+                                        <input type="text" id="street-address" placeholder="123 Creative Street">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="city">City</label>
+                                        <input type="text" id="city" placeholder="New York">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="state">State / Province</label>
+                                        <input type="text" id="state" placeholder="NY">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="country">Country</label>
+                                        <input type="text" id="country" placeholder="United States">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="linkedin-url">LinkedIn Profile</label>
+                                        <input type="url" id="linkedin-url" placeholder="linkedin.com/in/johndoe">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="github-url">GitHub Profile</label>
+                                        <input type="url" id="github-url" placeholder="github.com/johndoe">
+                                    </div>
+                                    <div class="form-group col-span-2">
+                                        <label for="portfolio-url">Portfolio Website</label>
+                                        <input type="url" id="portfolio-url" placeholder="johndoe.dev">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Career Objective Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-bullseye"></i> Career Objective / Summary</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="form-group">
+                                    <label for="career-summary">Professional Summary</label>
+                                    <textarea id="career-summary" rows="5" placeholder="Motivated and results-driven software engineer with 5+ years of experience in developing robust web applications..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Technical Skills Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-laptop-code"></i> Technical Skills</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-list-container" id="tech-skills-list">
+                                    <!-- Dynamic items injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-tech-skill">
+                                    <i class="fa-solid fa-plus"></i> Add Technical Skill
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Soft Skills Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-people-arrows"></i> Soft Skills</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-list-container" id="soft-skills-list">
+                                    <!-- Dynamic items injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-soft-skill">
+                                    <i class="fa-solid fa-plus"></i> Add Soft Skill
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Education Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-graduation-cap"></i> Education</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-block-container" id="education-blocks">
+                                    <!-- Dynamic blocks injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-education">
+                                    <i class="fa-solid fa-plus"></i> Add Education Entry
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Work Experience Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-briefcase"></i> Work Experience</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-block-container" id="work-blocks">
+                                    <!-- Dynamic blocks injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-work">
+                                    <i class="fa-solid fa-plus"></i> Add Work Block
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Academic Projects Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-diagram-project"></i> Academic Projects</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-block-container" id="project-blocks">
+                                    <!-- Dynamic blocks injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-project">
+                                    <i class="fa-solid fa-plus"></i> Add Project Block
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Certifications Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-certificate"></i> Certifications</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-list-container" id="certifications-list">
+                                    <!-- Dynamic items injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-certification">
+                                    <i class="fa-solid fa-plus"></i> Add Certification
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Achievements Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-trophy"></i> Achievements</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-list-container" id="achievements-list">
+                                    <!-- Dynamic items injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-achievement">
+                                    <i class="fa-solid fa-plus"></i> Add Achievement
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Languages Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-language"></i> Languages</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-list-container" id="languages-list">
+                                    <!-- Dynamic items injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-language">
+                                    <i class="fa-solid fa-plus"></i> Add Language
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Hobbies / Interests Section -->
+                        <div class="accordion-item">
+                            <button type="button" class="accordion-header">
+                                <span><i class="fa-solid fa-heart"></i> Hobbies & Interests</span>
+                                <i class="fa-solid fa-chevron-down arrow-icon"></i>
+                            </button>
+                            <div class="accordion-content">
+                                <div class="dynamic-list-container" id="hobbies-list">
+                                    <!-- Dynamic items injected here -->
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-hobby">
+                                    <i class="fa-solid fa-plus"></i> Add Hobby/Interest
+                                </button>
+                            </div>
+                        </div>
+
+                    </form>
+                </div>
+
+                <!-- RIGHT COLUMN: LIVE CV PREVIEW -->
+                <div class="preview-column">
+                    <!-- Preview Controls Toolbar -->
+                    <div class="preview-toolbar">
+                        <div class="toolbar-left">
+                            <span class="preview-status"><span class="pulse-dot"></span> Live Preview</span>
+                            <!-- Template Quick Switcher -->
+                            <div class="select-wrapper">
+                                <select id="template-select">
+                                    <option value="classic-executive">Classic Executive</option>
+                                    <option value="elegant-minimalist">Elegant Minimalist</option>
+                                    <option value="creative-tech">Creative Tech</option>
+                                    <option value="warm-slate">Warm Slate</option>
+                                </select>
+                                <i class="fa-solid fa-chevron-down select-arrow"></i>
+                            </div>
+                        </div>
+                        <div class="toolbar-right">
+                            <button id="btn-zoom-out" class="icon-btn" title="Zoom Out"><i class="fa-solid fa-magnifying-glass-minus"></i></button>
+                            <span id="zoom-percentage">100%</span>
+                            <button id="btn-zoom-in" class="icon-btn" title="Zoom In"><i class="fa-solid fa-magnifying-glass-plus"></i></button>
+                            <button id="btn-zoom-reset" class="icon-btn" title="Reset Zoom"><i class="fa-solid fa-arrows-to-eye"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Outer container of CV wrapper (used for scaling/zooming) -->
+                    <div class="preview-scroll-container">
+                        <div class="cv-scale-wrapper">
+                            
+                            <!-- THE CV PAGE CONTENT (This is exported directly to PDF) -->
+                            <div id="cv-preview-document" class="cv-preview-container template-classic-executive">
+                                <!-- CV content dynamically rendered here by JavaScript -->
+                            </div>
+                            
+                        </div>
+                    </div>
+
+                    <!-- Downloader Action Bar -->
+                    <div class="downloader-bar">
+                        <button id="btn-download-pdf" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
+                        <button id="btn-download-docx" class="btn btn-secondary"><i class="fa-solid fa-file-word"></i> Download Word (.docx)</button>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 CraftCV Builder. All rights reserved.</p>
+            <p>Designed for professional resumes.</p>
+        </div>
+    </footer>
+
+    <!-- Libraries loaded via CDN -->
+    <!-- Html2Pdf bundle includes html2canvas and jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <!-- Application Logic Script -->
+    <script src="app.js"></script>
+</body>
+</html>

@@ -35,7 +35,7 @@ let previewZoom = 1.0;
 // --- Demo Data / Quick Start Data ---
 const demoData = {
     selectedTemplate: 'classic-executive',
-    photo: '', // will be set to placeholder or left empty
+    photo: '',
     fullName: 'Riya Sharma',
     jobTitle: 'Computer Science Graduate',
     phone: '+91-98765432XX',
@@ -111,8 +111,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================================================================
-// SCROLL FIX: Directly set editor panel height via JS — bypasses all CSS
-// height-chain inheritance issues with flex/grid/overflow combinations.
+// SCROLL FIX
 // ==========================================================================
 function fixEditorScrollHeight() {
     const header = document.querySelector('.app-header');
@@ -128,13 +127,11 @@ function fixEditorScrollHeight() {
     const editorHeaderH = editorHeader ? editorHeader.offsetHeight : 60;
     const availableH = window.innerHeight - headerH;
 
-    // Directly force the form height so it scrolls regardless of CSS chain
     editorForm.style.height = (availableH - editorHeaderH) + 'px';
     editorForm.style.maxHeight = (availableH - editorHeaderH) + 'px';
     editorForm.style.overflowY = 'scroll';
     editorForm.style.overflowX = 'hidden';
 
-    // Also fix preview scroll container
     if (previewScrollContainer && previewToolbar && downloaderBar) {
         const used = previewToolbar.offsetHeight + downloaderBar.offsetHeight;
         previewScrollContainer.style.height = (availableH - used) + 'px';
@@ -153,11 +150,9 @@ function initApp() {
     setupZoomControls();
     setupExportHandlers();
 
-    // Apply scroll fix immediately and on every resize
     fixEditorScrollHeight();
     window.addEventListener('resize', fixEditorScrollHeight);
-    
-    // Load from LocalStorage or show Landing Page
+
     const savedData = localStorage.getItem('craftcv_data');
     if (savedData) {
         try {
@@ -168,7 +163,6 @@ function initApp() {
             console.error('Error loading saved data', e);
         }
     } else {
-        // Render initial blank state
         updatePreview();
     }
 }
@@ -180,10 +174,10 @@ function setupViewNavigation() {
     const btnHome = document.getElementById('nav-btn-home');
     const btnEditor = document.getElementById('nav-btn-editor');
     const logoHome = document.getElementById('logo-home');
-    
+
     const viewHome = document.getElementById('view-home');
     const viewEditor = document.getElementById('view-editor');
-    
+
     const switchToHome = () => {
         btnHome.classList.add('active');
         btnEditor.classList.remove('active');
@@ -192,7 +186,7 @@ function setupViewNavigation() {
         document.querySelector('.app-footer').style.display = 'block';
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
-    
+
     const switchToEditor = () => {
         btnHome.classList.remove('active');
         btnEditor.classList.add('active');
@@ -200,28 +194,24 @@ function setupViewNavigation() {
         viewEditor.classList.add('active-view');
         document.querySelector('.app-footer').style.display = 'none';
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        // Recalculate zoom fitting
         fitZoomToContainer();
-        // SCROLL FIX: Recalculate editor/preview panel heights after view switch
         setTimeout(fixEditorScrollHeight, 50);
     };
 
     btnHome.addEventListener('click', switchToHome);
     logoHome.addEventListener('click', switchToHome);
     btnEditor.addEventListener('click', switchToEditor);
-    
-    // Quick Start & Template Selection buttons
+
     document.getElementById('btn-quick-start').addEventListener('click', () => {
         loadDemoData();
         switchToEditor();
     });
 
-    // Template Cards Click Events
     const templateCards = document.querySelectorAll('.template-card');
     templateCards.forEach(card => {
         const btnUse = card.querySelector('.btn-use-template');
         const templateId = card.getAttribute('data-template');
-        
+
         const selectTemplateAndGo = () => {
             cvState.selectedTemplate = templateId;
             document.getElementById('template-select').value = templateId;
@@ -237,7 +227,6 @@ function setupViewNavigation() {
         card.addEventListener('click', selectTemplateAndGo);
     });
 
-    // Form select element for template switching in preview panel
     const templateSelect = document.getElementById('template-select');
     templateSelect.addEventListener('change', (e) => {
         cvState.selectedTemplate = e.target.value;
@@ -251,15 +240,14 @@ function setupViewNavigation() {
 // ==========================================================================
 function setupAccordion() {
     const accordions = document.querySelectorAll('.accordion-item');
-    
+
     accordions.forEach(item => {
         const header = item.querySelector('.accordion-header');
         const arrow = item.querySelector('.arrow-icon');
-        
+
         header.addEventListener('click', () => {
             const isExpanded = item.classList.contains('expanded');
-            
-            // Collapse all others (optional, but clean)
+
             accordions.forEach(acc => {
                 acc.classList.remove('expanded');
                 const accArrow = acc.querySelector('.arrow-icon');
@@ -267,7 +255,7 @@ function setupAccordion() {
                     accArrow.className = 'fa-solid fa-chevron-down arrow-icon';
                 }
             });
-            
+
             if (!isExpanded) {
                 item.classList.add('expanded');
                 arrow.className = 'fa-solid fa-chevron-up arrow-icon';
@@ -285,8 +273,7 @@ function setupAccordion() {
 function setupThemeToggle() {
     const toggleBtn = document.getElementById('theme-toggle');
     const root = document.documentElement;
-    
-    // Check saved theme
+
     const savedTheme = localStorage.getItem('craftcv_theme') || 'light';
     root.setAttribute('data-theme', savedTheme);
     updateThemeIcon(savedTheme);
@@ -294,7 +281,7 @@ function setupThemeToggle() {
     toggleBtn.addEventListener('click', () => {
         const currentTheme = root.getAttribute('data-theme');
         const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
+
         root.setAttribute('data-theme', newTheme);
         localStorage.setItem('craftcv_theme', newTheme);
         updateThemeIcon(newTheme);
@@ -318,7 +305,7 @@ function setupPhotoHandler() {
     const previewImg = document.getElementById('photo-preview-img');
     const placeholderIcon = document.getElementById('photo-placeholder-icon');
     const removeBtn = document.getElementById('btn-remove-photo');
-    
+
     photoInput.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -332,28 +319,27 @@ function setupPhotoHandler() {
         reader.onload = (event) => {
             const base64Data = event.target.result;
             cvState.photo = base64Data;
-            
-            // Update form elements
+
             previewImg.src = base64Data;
             previewImg.classList.remove('hidden');
             placeholderIcon.classList.add('hidden');
             removeBtn.classList.remove('hidden');
-            
+
             saveStateToLocalStorage();
             updatePreview();
         };
         reader.readAsDataURL(file);
     });
-    
+
     removeBtn.addEventListener('click', () => {
         cvState.photo = '';
         photoInput.value = '';
-        
+
         previewImg.src = '';
         previewImg.classList.add('hidden');
         placeholderIcon.classList.remove('hidden');
         removeBtn.classList.add('hidden');
-        
+
         saveStateToLocalStorage();
         updatePreview();
     });
@@ -365,48 +351,46 @@ function setupPhotoHandler() {
 function setupZoomControls() {
     const wrapper = document.querySelector('.cv-scale-wrapper');
     const zoomVal = document.getElementById('zoom-percentage');
-    
+
     const setZoom = (zoom) => {
         previewZoom = Math.max(0.4, Math.min(1.5, zoom));
         wrapper.style.transform = `scale(${previewZoom})`;
         zoomVal.innerText = `${Math.round(previewZoom * 100)}%`;
-        
-        // Correct height of container to avoid overflow blank spaces
+
         const container = document.querySelector('.preview-scroll-container');
         const docHeight = 1123 * previewZoom;
         wrapper.parentElement.style.height = `${docHeight + 80}px`;
     };
-    
+
     document.getElementById('btn-zoom-in').addEventListener('click', () => {
         setZoom(previewZoom + 0.1);
     });
-    
+
     document.getElementById('btn-zoom-out').addEventListener('click', () => {
         setZoom(previewZoom - 0.1);
     });
-    
+
     document.getElementById('btn-zoom-reset').addEventListener('click', () => {
         setZoom(1.0);
     });
-    
+
     window.addEventListener('resize', fitZoomToContainer);
 }
 
 function fitZoomToContainer() {
     const container = document.querySelector('.preview-scroll-container');
     if (!container || container.clientWidth === 0) return;
-    
-    // Fit to container width if container is smaller than A4 (794px) plus padding
+
     const padding = 40;
     const targetWidth = container.clientWidth - padding;
-    
+
     if (targetWidth < 794) {
         const scale = targetWidth / 794;
         previewZoom = Math.max(0.4, scale);
     } else {
         previewZoom = 1.0;
     }
-    
+
     const wrapper = document.querySelector('.cv-scale-wrapper');
     const zoomVal = document.getElementById('zoom-percentage');
     if (wrapper && zoomVal) {
@@ -420,7 +404,6 @@ function fitZoomToContainer() {
 // DYNAMIC FIELDS MANAGEMENT
 // ==========================================================================
 function setupDynamicFields() {
-    // Simple Badge Lists
     setupSimpleList('tech-skills-list', 'btn-add-tech-skill', 'techSkills', 'Python, Java, etc.');
     setupSimpleList('soft-skills-list', 'btn-add-soft-skill', 'softSkills', 'Communication, Leadership');
     setupSimpleList('certifications-list', 'btn-add-certification', 'certifications', 'Google Data Analytics Certificate');
@@ -428,7 +411,6 @@ function setupDynamicFields() {
     setupSimpleList('languages-list', 'btn-add-language', 'languages', 'English (Fluent)');
     setupSimpleList('hobbies-list', 'btn-add-hobby', 'hobbies', 'Playing Chess');
 
-    // Complex Blocks
     setupBlockList('education-blocks', 'btn-add-education', 'education', {
         degree: { label: 'Degree', placeholder: 'B.Tech / MBA' },
         institution: { label: 'Institution / School', placeholder: 'XYZ University' },
@@ -453,7 +435,6 @@ function setupDynamicFields() {
         demo: { label: 'Live Demo Link (Optional)', placeholder: 'project.live' }
     });
 
-    // Reset Form button
     document.getElementById('btn-clear-form').addEventListener('click', () => {
         if (confirm('Are you sure you want to clear all details? This cannot be undone.')) {
             clearForm();
@@ -461,7 +442,6 @@ function setupDynamicFields() {
     });
 }
 
-/* Setup dynamic simple list string arrays (e.g. skills, certifications) */
 function setupSimpleList(containerId, addBtnId, stateKey, placeholder) {
     const container = document.getElementById(containerId);
     const addBtn = document.getElementById(addBtnId);
@@ -469,26 +449,25 @@ function setupSimpleList(containerId, addBtnId, stateKey, placeholder) {
     const renderItem = (value = '') => {
         const row = document.createElement('div');
         row.className = 'dynamic-item-row';
-        
+
         const input = document.createElement('input');
         input.type = 'text';
         input.value = value;
         input.placeholder = placeholder;
-        
+
         const deleteBtn = document.createElement('button');
         deleteBtn.type = 'button';
         deleteBtn.className = 'btn-text-danger';
         deleteBtn.innerHTML = '<i class="fa-solid fa-trash"></i>';
-        
+
         row.appendChild(input);
         row.appendChild(deleteBtn);
         container.appendChild(row);
-        
-        // Listeners
+
         input.addEventListener('input', () => {
             collectSimpleListData(container, stateKey);
         });
-        
+
         deleteBtn.addEventListener('click', () => {
             row.remove();
             collectSimpleListData(container, stateKey);
@@ -499,7 +478,6 @@ function setupSimpleList(containerId, addBtnId, stateKey, placeholder) {
         renderItem();
     });
 
-    // Store renderer on container so we can call it when populating state
     container.renderItem = renderItem;
 }
 
@@ -516,7 +494,6 @@ function collectSimpleListData(container, stateKey) {
     updatePreview();
 }
 
-/* Setup dynamic complex blocks lists (e.g. Education, Work, Projects) */
 function setupBlockList(containerId, addBtnId, stateKey, fieldsSchema) {
     const container = document.getElementById(containerId);
     const addBtn = document.getElementById(addBtnId);
@@ -524,29 +501,28 @@ function setupBlockList(containerId, addBtnId, stateKey, fieldsSchema) {
     const renderBlock = (data = {}) => {
         const block = document.createElement('div');
         block.className = 'dynamic-block-item';
-        
+
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn-remove-block';
         removeBtn.innerHTML = '<i class="fa-solid fa-xmark"></i>';
         block.appendChild(removeBtn);
-        
+
         const grid = document.createElement('div');
         grid.className = 'form-grid';
-        
+
         Object.keys(fieldsSchema).forEach(fieldKey => {
             const field = fieldsSchema[fieldKey];
             const group = document.createElement('div');
             group.className = 'form-group';
-            
-            // Make descriptions full span
+
             if (fieldKey === 'desc') {
                 group.className = 'form-group col-span-2';
             }
-            
+
             const label = document.createElement('label');
             label.innerText = field.label;
-            
+
             let input;
             if (field.textarea) {
                 input = document.createElement('textarea');
@@ -555,23 +531,23 @@ function setupBlockList(containerId, addBtnId, stateKey, fieldsSchema) {
                 input = document.createElement('input');
                 input.type = 'text';
             }
-            
+
             input.value = data[fieldKey] || '';
             input.placeholder = field.placeholder;
             input.dataset.key = fieldKey;
-            
+
             group.appendChild(label);
             group.appendChild(input);
             grid.appendChild(group);
-            
+
             input.addEventListener('input', () => {
                 collectBlockListData(container, stateKey);
             });
         });
-        
+
         block.appendChild(grid);
         container.appendChild(block);
-        
+
         removeBtn.addEventListener('click', () => {
             block.remove();
             collectBlockListData(container, stateKey);
@@ -588,24 +564,24 @@ function setupBlockList(containerId, addBtnId, stateKey, fieldsSchema) {
 function collectBlockListData(container, stateKey) {
     const blocks = container.querySelectorAll('.dynamic-block-item');
     cvState[stateKey] = [];
-    
+
     blocks.forEach(block => {
         const fields = block.querySelectorAll('input, textarea');
         let blockObj = {};
         let hasValues = false;
-        
+
         fields.forEach(field => {
             const val = field.value.trim();
             const key = field.dataset.key;
             blockObj[key] = val;
             if (val) hasValues = true;
         });
-        
+
         if (hasValues) {
             cvState[stateKey].push(blockObj);
         }
     });
-    
+
     saveStateToLocalStorage();
     updatePreview();
 }
@@ -632,8 +608,6 @@ function setupInputListeners() {
     textInputs.forEach(item => {
         const element = document.getElementById(item.id);
         element.addEventListener('input', (e) => {
-            // BUG FIX: Do not trim on every keystroke — trimming live breaks typing spaces.
-            // Trim only when reading values for export/preview, not during user input.
             cvState[item.key] = e.target.value;
             saveStateToLocalStorage();
             updatePreview();
@@ -649,7 +623,6 @@ function saveStateToLocalStorage() {
 }
 
 function populateFormFromState() {
-    // Basic text fields
     document.getElementById('full-name').value = cvState.fullName || '';
     document.getElementById('job-title').value = cvState.jobTitle || '';
     document.getElementById('phone-number').value = cvState.phone || '';
@@ -664,11 +637,10 @@ function populateFormFromState() {
     document.getElementById('career-summary').value = cvState.careerSummary || '';
     document.getElementById('template-select').value = cvState.selectedTemplate || 'classic-executive';
 
-    // Profile photo preview loading
     const previewImg = document.getElementById('photo-preview-img');
     const placeholderIcon = document.getElementById('photo-placeholder-icon');
     const removeBtn = document.getElementById('btn-remove-photo');
-    
+
     if (cvState.photo) {
         previewImg.src = cvState.photo;
         previewImg.classList.remove('hidden');
@@ -681,7 +653,6 @@ function populateFormFromState() {
         removeBtn.classList.add('hidden');
     }
 
-    // Dynamic Lists (Clear container first, then draw items)
     const listMap = [
         { id: 'tech-skills-list', key: 'techSkills' },
         { id: 'soft-skills-list', key: 'softSkills' },
@@ -701,7 +672,6 @@ function populateFormFromState() {
         }
     });
 
-    // Dynamic Blocks
     const blockMap = [
         { id: 'education-blocks', key: 'education' },
         { id: 'work-blocks', key: 'work' },
@@ -745,19 +715,16 @@ function clearForm() {
         languages: [],
         hobbies: []
     };
-    
-    // Clear inputs in DOM
+
     const formInputs = document.querySelectorAll('#cv-form input, #cv-form textarea');
     formInputs.forEach(input => input.value = '');
-    
-    // Clear photo DOM elements
+
     document.getElementById('profile-photo').value = '';
     document.getElementById('photo-preview-img').src = '';
     document.getElementById('photo-preview-img').classList.add('hidden');
     document.getElementById('photo-placeholder-icon').classList.remove('hidden');
     document.getElementById('btn-remove-photo').classList.add('hidden');
-    
-    // Re-initialize lists
+
     document.getElementById('tech-skills-list').innerHTML = '';
     document.getElementById('soft-skills-list').innerHTML = '';
     document.getElementById('education-blocks').innerHTML = '';
@@ -767,7 +734,7 @@ function clearForm() {
     document.getElementById('achievements-list').innerHTML = '';
     document.getElementById('languages-list').innerHTML = '';
     document.getElementById('hobbies-list').innerHTML = '';
-    
+
     localStorage.removeItem('craftcv_data');
     updatePreview();
 }
@@ -780,17 +747,15 @@ function loadDemoData() {
 }
 
 // ==========================================================================
-// RENDERING LIVE PREVIEW ENGINE (Pixel-Perfect Matching)
+// RENDERING LIVE PREVIEW ENGINE
 // ==========================================================================
 function updatePreview() {
     const previewContainer = document.getElementById('cv-preview-document');
     if (!previewContainer) return;
 
-    // Reset container classes
     previewContainer.className = `cv-preview-container template-${cvState.selectedTemplate}`;
     previewContainer.innerHTML = '';
 
-    // Choose layout generator based on active template
     switch (cvState.selectedTemplate) {
         case 'classic-executive':
             renderClassicTemplate(previewContainer);
@@ -807,7 +772,6 @@ function updatePreview() {
     }
 }
 
-// Helpers for check availability of fields
 function hasContactInfo() {
     return cvState.phone || cvState.email || cvState.address || cvState.city || cvState.state || cvState.country || cvState.linkedin || cvState.github || cvState.portfolio;
 }
@@ -823,11 +787,9 @@ function getFormattedLocation() {
 
 // RENDER: TEMPLATE 1 - CLASSIC EXECUTIVE
 function renderClassicTemplate(container) {
-    // Left Sidebar
     const sidebar = document.createElement('div');
     sidebar.className = 'sidebar';
 
-    // Sidebar Photo
     if (cvState.photo) {
         const photoContainer = document.createElement('div');
         photoContainer.className = 'cv-photo-circle';
@@ -835,82 +797,76 @@ function renderClassicTemplate(container) {
         sidebar.appendChild(photoContainer);
     }
 
-    // Sidebar Contact Section
     if (hasContactInfo()) {
         const sec = document.createElement('div');
         sec.className = 'sidebar-section';
         sec.innerHTML = `<h3>Contact</h3>`;
-        
+
         const list = document.createElement('div');
         list.className = 'sidebar-contact';
-        
+
         if (cvState.phone) list.innerHTML += `<div><i class="fa-solid fa-phone"></i> ${cvState.phone}</div>`;
         if (cvState.email) list.innerHTML += `<div><i class="fa-solid fa-envelope"></i> ${cvState.email}</div>`;
-        
+
         const location = getFormattedLocation();
         if (location) list.innerHTML += `<div><i class="fa-solid fa-location-dot"></i> ${location}</div>`;
-        
+
         if (cvState.linkedin) list.innerHTML += `<div><i class="fa-brands fa-linkedin"></i> ${cvState.linkedin}</div>`;
         if (cvState.github) list.innerHTML += `<div><i class="fa-brands fa-github"></i> ${cvState.github}</div>`;
         if (cvState.portfolio) list.innerHTML += `<div><i class="fa-solid fa-globe"></i> ${cvState.portfolio}</div>`;
-        
+
         sec.appendChild(list);
         sidebar.appendChild(sec);
     }
 
-    // Sidebar Certifications
     if (cvState.certifications && cvState.certifications.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'sidebar-section';
         sec.innerHTML = `<h3>Certifications</h3>`;
-        
+
         const list = document.createElement('ul');
         list.className = 'sidebar-list';
         cvState.certifications.forEach(cert => {
             list.innerHTML += `<li>${cert}</li>`;
         });
-        
+
         sec.appendChild(list);
         sidebar.appendChild(sec);
     }
 
-    // Sidebar Languages
     if (cvState.languages && cvState.languages.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'sidebar-section';
         sec.innerHTML = `<h3>Languages</h3>`;
-        
+
         const list = document.createElement('ul');
         list.className = 'sidebar-list';
         cvState.languages.forEach(lang => {
             list.innerHTML += `<li>${lang}</li>`;
         });
-        
+
         sec.appendChild(list);
         sidebar.appendChild(sec);
     }
 
-    // Sidebar Hobbies
     if (cvState.hobbies && cvState.hobbies.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'sidebar-section';
         sec.innerHTML = `<h3>Hobbies</h3>`;
-        
+
         const list = document.createElement('ul');
         list.className = 'sidebar-list';
         cvState.hobbies.forEach(hobby => {
             list.innerHTML += `<li>${hobby}</li>`;
         });
-        
+
         sec.appendChild(list);
         sidebar.appendChild(sec);
     }
 
-    // Right Main Pane
     const main = document.createElement('div');
     main.className = 'main-content';
 
-    // Main Header
     if (cvState.fullName || cvState.jobTitle) {
         const header = document.createElement('div');
         header.className = 'main-header';
@@ -921,7 +877,6 @@ function renderClassicTemplate(container) {
         main.appendChild(header);
     }
 
-    // Career Summary Section
     if (cvState.careerSummary) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -932,7 +887,6 @@ function renderClassicTemplate(container) {
         main.appendChild(sec);
     }
 
-    // Tech Skills
     if (cvState.techSkills && cvState.techSkills.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -948,7 +902,6 @@ function renderClassicTemplate(container) {
         main.appendChild(sec);
     }
 
-    // Soft Skills
     if (cvState.softSkills && cvState.softSkills.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -964,7 +917,6 @@ function renderClassicTemplate(container) {
         main.appendChild(sec);
     }
 
-    // Education
     if (cvState.education && cvState.education.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -988,7 +940,6 @@ function renderClassicTemplate(container) {
         main.appendChild(sec);
     }
 
-    // Work Experience
     if (cvState.work && cvState.work.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1013,7 +964,6 @@ function renderClassicTemplate(container) {
         main.appendChild(sec);
     }
 
-    // Academic Projects
     if (cvState.projects && cvState.projects.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1024,11 +974,8 @@ function renderClassicTemplate(container) {
             let links = [];
             if (proj.github) links.push(`GitHub: <a href="https://${proj.github}" target="_blank">${proj.github}</a>`);
             if (proj.demo) links.push(`Live: <a href="https://${proj.demo}" target="_blank">${proj.demo}</a>`);
-            // BUG FIX: Was building linksStr as " | link1 | link2" then calling .substring(3)
-            // to strip the leading " | " — fragile and off-by-one if links is empty.
-            // Now just joining directly without the erroneous leading separator.
             const linksStr = links.join(' | ');
-            
+
             sec.innerHTML += `
                 <div class="cv-item-block">
                     <div class="cv-item-header">
@@ -1042,7 +989,6 @@ function renderClassicTemplate(container) {
         main.appendChild(sec);
     }
 
-    // Achievements
     if (cvState.achievements && cvState.achievements.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1064,15 +1010,9 @@ function renderClassicTemplate(container) {
 
 // RENDER: TEMPLATE 2 - ELEGANT MINIMALIST
 function renderMinimalistTemplate(container) {
-    // Header block
     const headerBlock = document.createElement('div');
     headerBlock.className = 'header-block';
 
-    // Circular Photo
-    // BUG FIX: Must append photo element BEFORE setting innerHTML on headerBlock.
-    // Using innerHTML += after appendChild serializes & re-creates child nodes,
-    // destroying event listeners and causing subtle DOM bugs.
-    // Solution: build name/title in a separate wrapper div, then append both.
     if (cvState.photo) {
         const photoContainer = document.createElement('div');
         photoContainer.className = 'cv-photo-circle';
@@ -1087,30 +1027,27 @@ function renderMinimalistTemplate(container) {
     `;
     headerBlock.appendChild(headerText);
 
-    // Horizontal Contact row
     if (hasContactInfo()) {
         const contactRow = document.createElement('div');
         contactRow.className = 'contact-horizontal';
-        
+
         if (cvState.phone) contactRow.innerHTML += `<span><i class="fa-solid fa-phone"></i> ${cvState.phone}</span>`;
         if (cvState.email) contactRow.innerHTML += `<span><i class="fa-solid fa-envelope"></i> ${cvState.email}</span>`;
-        
+
         const location = getFormattedLocation();
         if (location) contactRow.innerHTML += `<span><i class="fa-solid fa-location-dot"></i> ${location}</span>`;
-        
+
         if (cvState.linkedin) contactRow.innerHTML += `<span><i class="fa-brands fa-linkedin"></i> ${cvState.linkedin}</span>`;
         if (cvState.github) contactRow.innerHTML += `<span><i class="fa-brands fa-github"></i> ${cvState.github}</span>`;
         if (cvState.portfolio) contactRow.innerHTML += `<span><i class="fa-solid fa-globe"></i> ${cvState.portfolio}</span>`;
-        
+
         headerBlock.appendChild(contactRow);
     }
     container.appendChild(headerBlock);
 
-    // Body content wrapper
     const bodyContent = document.createElement('div');
     bodyContent.className = 'body-content';
 
-    // Summary
     if (cvState.careerSummary) {
         bodyContent.innerHTML += `
             <div class="cv-section">
@@ -1120,14 +1057,13 @@ function renderMinimalistTemplate(container) {
         `;
     }
 
-    // Skills Grid (Combined)
     if ((cvState.techSkills && cvState.techSkills.length > 0) || (cvState.softSkills && cvState.softSkills.length > 0)) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Skills Overview</div>`;
         const grid = document.createElement('div');
         grid.className = 'cv-skills-grid';
-        
+
         if (cvState.techSkills) {
             cvState.techSkills.forEach(skill => {
                 grid.innerHTML += `<span class="cv-skill-badge">${skill}</span>`;
@@ -1142,12 +1078,11 @@ function renderMinimalistTemplate(container) {
         bodyContent.appendChild(sec);
     }
 
-    // Education
     if (cvState.education && cvState.education.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Education</div>`;
-        
+
         cvState.education.forEach(edu => {
             sec.innerHTML += `
                 <div class="cv-item-block">
@@ -1165,12 +1100,11 @@ function renderMinimalistTemplate(container) {
         bodyContent.appendChild(sec);
     }
 
-    // Work Experience
     if (cvState.work && cvState.work.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Professional Experience</div>`;
-        
+
         cvState.work.forEach(job => {
             sec.innerHTML += `
                 <div class="cv-item-block">
@@ -1188,12 +1122,11 @@ function renderMinimalistTemplate(container) {
         bodyContent.appendChild(sec);
     }
 
-    // Projects
     if (cvState.projects && cvState.projects.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Academic & Personal Projects</div>`;
-        
+
         cvState.projects.forEach(proj => {
             let links = [];
             if (proj.github) links.push(`GitHub: ${proj.github}`);
@@ -1213,15 +1146,14 @@ function renderMinimalistTemplate(container) {
         bodyContent.appendChild(sec);
     }
 
-    // Certifications & Achievements
     if ((cvState.certifications && cvState.certifications.length > 0) || (cvState.achievements && cvState.achievements.length > 0)) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Certifications & Achievements</div>`;
-        
+
         const list = document.createElement('ul');
         list.className = 'cv-list-items';
-        
+
         if (cvState.certifications) {
             cvState.certifications.forEach(cert => {
                 list.innerHTML += `<li>${cert} (Certificate)</li>`;
@@ -1236,12 +1168,11 @@ function renderMinimalistTemplate(container) {
         bodyContent.appendChild(sec);
     }
 
-    // Languages, Hobbies
     if ((cvState.languages && cvState.languages.length > 0) || (cvState.hobbies && cvState.hobbies.length > 0)) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Personal Details</div>`;
-        
+
         let details = [];
         if (cvState.languages && cvState.languages.length > 0) {
             details.push(`<strong>Languages:</strong> ${cvState.languages.join(', ')}`);
@@ -1249,7 +1180,7 @@ function renderMinimalistTemplate(container) {
         if (cvState.hobbies && cvState.hobbies.length > 0) {
             details.push(`<strong>Interests:</strong> ${cvState.hobbies.join(', ')}`);
         }
-        
+
         sec.innerHTML += `<p class="cv-item-desc">${details.join('<br>')}</p>`;
         bodyContent.appendChild(sec);
     }
@@ -1259,10 +1190,9 @@ function renderMinimalistTemplate(container) {
 
 // RENDER: TEMPLATE 3 - CREATIVE TECH
 function renderCreativeTemplate(container) {
-    // Top banner
     const banner = document.createElement('div');
     banner.className = 'top-banner';
-    
+
     const bannerInfo = document.createElement('div');
     bannerInfo.className = 'header-info';
     bannerInfo.innerHTML = `
@@ -1271,7 +1201,6 @@ function renderCreativeTemplate(container) {
     `;
     banner.appendChild(bannerInfo);
 
-    // Profile Photo in Banner (circular overlap)
     if (cvState.photo) {
         const bannerPhoto = document.createElement('div');
         bannerPhoto.className = 'banner-photo';
@@ -1283,15 +1212,12 @@ function renderCreativeTemplate(container) {
     }
     container.appendChild(banner);
 
-    // Body content grid
     const creativeBody = document.createElement('div');
     creativeBody.className = 'creative-body';
 
-    // Left Pane
     const leftPane = document.createElement('div');
     leftPane.className = 'left-pane';
 
-    // Career Summary
     if (cvState.careerSummary) {
         leftPane.innerHTML += `
             <div class="cv-section">
@@ -1301,12 +1227,11 @@ function renderCreativeTemplate(container) {
         `;
     }
 
-    // Work Experience
     if (cvState.work && cvState.work.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-briefcase"></i> Experience</div>`;
-        
+
         cvState.work.forEach(job => {
             sec.innerHTML += `
                 <div class="cv-item-block">
@@ -1324,12 +1249,11 @@ function renderCreativeTemplate(container) {
         leftPane.appendChild(sec);
     }
 
-    // Projects
     if (cvState.projects && cvState.projects.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-terminal"></i> Key Projects</div>`;
-        
+
         cvState.projects.forEach(proj => {
             let links = [];
             if (proj.github) links.push(`<a href="https://${proj.github}" target="_blank"><i class="fa-brands fa-github"></i> Source</a>`);
@@ -1352,34 +1276,31 @@ function renderCreativeTemplate(container) {
         leftPane.appendChild(sec);
     }
 
-    // Right Pane
     const rightPane = document.createElement('div');
     rightPane.className = 'right-pane';
 
-    // Contact
     if (hasContactInfo()) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-address-book"></i> Connect</div>`;
-        
+
         const list = document.createElement('div');
         list.className = 'contact-vertical';
-        
+
         if (cvState.phone) list.innerHTML += `<div><i class="fa-solid fa-phone"></i> ${cvState.phone}</div>`;
         if (cvState.email) list.innerHTML += `<div><i class="fa-solid fa-envelope"></i> ${cvState.email}</div>`;
-        
+
         const location = getFormattedLocation();
         if (location) list.innerHTML += `<div><i class="fa-solid fa-location-dot"></i> ${location}</div>`;
-        
+
         if (cvState.linkedin) list.innerHTML += `<div><i class="fa-brands fa-linkedin"></i> ${cvState.linkedin}</div>`;
         if (cvState.github) list.innerHTML += `<div><i class="fa-brands fa-github"></i> ${cvState.github}</div>`;
         if (cvState.portfolio) list.innerHTML += `<div><i class="fa-solid fa-globe"></i> ${cvState.portfolio}</div>`;
-        
+
         sec.appendChild(list);
         rightPane.appendChild(sec);
     }
 
-    // Tech Skills
     if (cvState.techSkills && cvState.techSkills.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1393,7 +1314,6 @@ function renderCreativeTemplate(container) {
         rightPane.appendChild(sec);
     }
 
-    // Soft Skills
     if (cvState.softSkills && cvState.softSkills.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1407,7 +1327,6 @@ function renderCreativeTemplate(container) {
         rightPane.appendChild(sec);
     }
 
-    // Education
     if (cvState.education && cvState.education.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1424,18 +1343,17 @@ function renderCreativeTemplate(container) {
         rightPane.appendChild(sec);
     }
 
-    // Languages & Hobbies
     if ((cvState.languages && cvState.languages.length > 0) || (cvState.hobbies && cvState.hobbies.length > 0)) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-sparkles"></i> More</div>`;
-        
+
         const list = document.createElement('ul');
         list.className = 'sidebar-list';
         list.style.listStyleType = 'none';
         list.style.fontSize = '12px';
         list.style.paddingLeft = '0';
-        
+
         if (cvState.languages) {
             cvState.languages.forEach(lang => {
                 list.innerHTML += `<li><i class="fa-solid fa-comment-dots" style="color:#7c3aed; margin-right:6px;"></i> ${lang}</li>`;
@@ -1457,7 +1375,6 @@ function renderCreativeTemplate(container) {
 
 // RENDER: TEMPLATE 4 - WARM SLATE
 function renderWarmSlateTemplate(container) {
-    // Left Main Area
     const mainArea = document.createElement('div');
     mainArea.className = 'main-area';
 
@@ -1466,7 +1383,6 @@ function renderWarmSlateTemplate(container) {
         ${cvState.jobTitle ? `<div class="title">${cvState.jobTitle}</div>` : ''}
     `;
 
-    // Summary
     if (cvState.careerSummary) {
         mainArea.innerHTML += `
             <div class="cv-section">
@@ -1476,7 +1392,6 @@ function renderWarmSlateTemplate(container) {
         `;
     }
 
-    // Experience
     if (cvState.work && cvState.work.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1498,7 +1413,6 @@ function renderWarmSlateTemplate(container) {
         mainArea.appendChild(sec);
     }
 
-    // Projects
     if (cvState.projects && cvState.projects.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1508,7 +1422,7 @@ function renderWarmSlateTemplate(container) {
             if (proj.github) links.push(`<a href="https://${proj.github}" target="_blank" style="color:#ea580c;">GitHub</a>`);
             if (proj.demo) links.push(`<a href="https://${proj.demo}" target="_blank" style="color:#ea580c;">Demo</a>`);
             const linksStr = links.length > 0 ? ` &bull; ${links.join(' &bull; ')}` : '';
-            
+
             sec.innerHTML += `
                 <div class="cv-item-block">
                     <div class="cv-item-header">
@@ -1525,11 +1439,9 @@ function renderWarmSlateTemplate(container) {
         mainArea.appendChild(sec);
     }
 
-    // Right Side Pane
     const sidePane = document.createElement('div');
     sidePane.className = 'side-pane';
 
-    // Photo
     if (cvState.photo) {
         const photoCircle = document.createElement('div');
         photoCircle.className = 'cv-photo-circle';
@@ -1537,30 +1449,28 @@ function renderWarmSlateTemplate(container) {
         sidePane.appendChild(photoCircle);
     }
 
-    // Contact details
     if (hasContactInfo()) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Details</div>`;
-        
+
         const list = document.createElement('div');
         list.className = 'contact-list';
-        
+
         if (cvState.phone) list.innerHTML += `<div><i class="fa-solid fa-phone"></i> ${cvState.phone}</div>`;
         if (cvState.email) list.innerHTML += `<div><i class="fa-solid fa-envelope"></i> ${cvState.email}</div>`;
-        
+
         const location = getFormattedLocation();
         if (location) list.innerHTML += `<div><i class="fa-solid fa-location-dot"></i> ${location}</div>`;
-        
+
         if (cvState.linkedin) list.innerHTML += `<div><i class="fa-brands fa-linkedin"></i> ${cvState.linkedin}</div>`;
         if (cvState.github) list.innerHTML += `<div><i class="fa-brands fa-github"></i> ${cvState.github}</div>`;
         if (cvState.portfolio) list.innerHTML += `<div><i class="fa-solid fa-globe"></i> ${cvState.portfolio}</div>`;
-        
+
         sec.appendChild(list);
         sidePane.appendChild(sec);
     }
 
-    // Education in sidepane
     if (cvState.education && cvState.education.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1578,7 +1488,6 @@ function renderWarmSlateTemplate(container) {
         sidePane.appendChild(sec);
     }
 
-    // Technical Skills
     if (cvState.techSkills && cvState.techSkills.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1592,7 +1501,6 @@ function renderWarmSlateTemplate(container) {
         sidePane.appendChild(sec);
     }
 
-    // Achievements
     if (cvState.achievements && cvState.achievements.length > 0) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
@@ -1613,372 +1521,250 @@ function renderWarmSlateTemplate(container) {
 }
 
 // ==========================================================================
-// EXPORTERS & DOWNLOAD DRIVER (PDF & WORD)
+// PDF EXPORT — ROBUST CROSS-DEVICE IMPLEMENTATION
+//
+// ROOT CAUSES OF FAILURES:
+//   Desktop: jsPDF constructor path differed between html2pdf bundle versions.
+//   Mobile:  html2canvas cannot render elements that are:
+//            (a) inside overflow:hidden parents, or
+//            (b) scaled via CSS transform, or
+//            (c) positioned off-screen (negative coords on some WebKit builds).
+//
+// FIX STRATEGY:
+//   1. Build a FULL COPY of the CV HTML as a self-contained string (inline all
+//      template CSS + FontAwesome CDN link so the clone renders identically).
+//   2. Open that string in a hidden <iframe> that is ON-SCREEN (1px × 1px,
+//      opacity:0, pointer-events:none) so mobile WebKit renders it fully.
+//   3. Wait for the iframe's load event, then call html2canvas on the iframe's
+//      document body — which is guaranteed to be fully laid out at 794px width
+//      with no transforms or clipping.
+//   4. After capture, remove the iframe and save the PDF.
+//
+// This approach avoids every known mobile blank-page failure mode.
 // ==========================================================================
 function setupExportHandlers() {
     const btnPdf = document.getElementById('btn-download-pdf');
-    const btnDocx = document.getElementById('btn-download-docx');
 
-    // PDF download - uses html2canvas + jsPDF directly (NOT html2pdf wrapper)
-    // This approach works on ALL devices including mobile because:
-    // 1. Clone is placed at top:0 left:0 VISIBLE on screen (mobile won't render off-screen)
-    // 2. A full-screen overlay hides it from the user during capture
-    // 3. html2canvas captures it, jsPDF saves it — no wrapper quirks
     btnPdf.addEventListener('click', () => {
-        const docElement = document.getElementById('cv-preview-document');
-        const fullName = cvState.fullName || 'craftcv_resume';
-        const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
-
-        // Show a loading indicator
-        btnPdf.disabled = true;
-        btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
-
-        // Create overlay to hide the clone from user view
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99998;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-family:sans-serif;';
-        overlay.innerHTML = '<div>Generating PDF, please wait...</div>';
-        document.body.appendChild(overlay);
-
-        // Clone the CV and place it at top-left VISIBLE (mobile requirement)
-        const clone = docElement.cloneNode(true);
-        clone.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 794px;
-            min-height: 1123px;
-            z-index: 99999;
-            transform: none;
-            overflow: visible;
-            background: #fff;
-        `;
-        document.body.appendChild(clone);
-
-        // Wait one frame for browser to paint the clone
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                html2canvas(clone, {
-                    scale: 2,
-                    useCORS: true,
-                    allowTaint: true,
-                    letterRendering: true,
-                    logging: false,
-                    width: 794,
-                    height: clone.scrollHeight,
-                    windowWidth: 794
-                }).then(canvas => {
-                    // Remove clone and overlay immediately after capture
-                    document.body.removeChild(clone);
-                    document.body.removeChild(overlay);
-
-                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
-
-                    // Access jsPDF — html2pdf bundle exposes it as window.jspdf.jsPDF
-                    // Fallback to window.jsPDF for older bundle versions
-                    const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-                    if (!jsPDFConstructor) {
-                        alert('PDF library not loaded. Please refresh and try again.');
-                        btnPdf.disabled = false;
-                        btnPdf.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
-                        return;
-                    }
-                    const pdf = new jsPDFConstructor({ unit: 'mm', format: 'a4', orientation: 'portrait' });
-
-                    const pageW = pdf.internal.pageSize.getWidth();   // 210mm
-                    const pageH = pdf.internal.pageSize.getHeight();  // 297mm
-
-                    const canvasW = canvas.width;
-                    const canvasH = canvas.height;
-
-                    // Scale image to fit page width exactly
-                    const imgH = (canvasH / canvasW) * pageW;
-
-                    if (imgH <= pageH) {
-                        // Fits on one page
-                        pdf.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
-                    } else {
-                        // Content taller than one page — scale down to fit
-                        const scale = pageH / imgH;
-                        pdf.addImage(imgData, 'JPEG', 0, 0, pageW * scale, pageH);
-                    }
-
-                    pdf.save(filename);
-
-                    // Restore button
-                    btnPdf.disabled = false;
-                    btnPdf.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
-
-                }).catch(err => {
-                    console.error('PDF capture failed:', err);
-                    if (document.body.contains(clone)) document.body.removeChild(clone);
-                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
-                    btnPdf.disabled = false;
-                    btnPdf.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
-                    alert('PDF generation failed. Please try again.');
-                });
-            }, 300); // 300ms delay ensures clone is fully painted
-        });
-    });
-
-    // Word document download (generates rich Word HTML wrapper)
-    btnDocx.addEventListener('click', () => {
-        const fullName = cvState.fullName || 'craftcv_resume';
-        const docHtml = generateWordHTMLContent();
-        
-        const blob = new Blob(['\ufeff' + docHtml], {
-            type: 'application/msword'
-        });
-
-        // Trigger file download
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.doc`;
-        document.body.appendChild(link);
-        link.click();
-        
-        // Cleanup
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        downloadPDF();
     });
 }
 
+function downloadPDF() {
+    const btnPdf = document.getElementById('btn-download-pdf');
+    const fullName = cvState.fullName || 'craftcv_resume';
+    const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
+
+    // Disable button, show loading state
+    btnPdf.disabled = true;
+    btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+
+    // Build the full self-contained HTML for the CV
+    const cvHTML = buildSelfContainedCVHTML();
+
+    // Create a hidden on-screen iframe (must be visible for mobile to render)
+    const iframe = document.createElement('iframe');
+    iframe.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 794px;
+        height: 1px;
+        opacity: 0;
+        pointer-events: none;
+        border: none;
+        z-index: -1;
+    `;
+    document.body.appendChild(iframe);
+
+    // Write the HTML into the iframe
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    iframeDoc.open();
+    iframeDoc.write(cvHTML);
+    iframeDoc.close();
+
+    // Wait for iframe content (images, fonts) to fully load
+    const captureFromIframe = () => {
+        const cvBody = iframeDoc.body;
+        const cvRoot = iframeDoc.getElementById('cv-root');
+        const targetEl = cvRoot || cvBody;
+
+        // Give fonts an extra moment to paint on mobile
+        setTimeout(() => {
+            html2canvas(targetEl, {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
+                letterRendering: true,
+                logging: false,
+                width: 794,
+                height: targetEl.scrollHeight,
+                windowWidth: 794,
+                windowHeight: targetEl.scrollHeight,
+                scrollX: 0,
+                scrollY: 0,
+                // Explicitly set background so mobile doesn't produce transparent/black
+                backgroundColor: '#ffffff'
+            }).then(canvas => {
+                // Clean up iframe immediately after capture
+                document.body.removeChild(iframe);
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+                // Resolve jsPDF constructor across bundle versions
+                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                if (!jsPDFConstructor) {
+                    alert('PDF library failed to load. Please refresh the page and try again.');
+                    resetButton(btnPdf);
+                    return;
+                }
+
+                const pdf = new jsPDFConstructor({
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait'
+                });
+
+                const pageW = pdf.internal.pageSize.getWidth();   // 210mm
+                const pageH = pdf.internal.pageSize.getHeight();  // 297mm
+
+                // canvas.width & canvas.height are in physical pixels (scale:2)
+                // We need to figure out how many A4 pages the content spans
+                const canvasW = canvas.width;
+                const canvasH = canvas.height;
+
+                // mm per pixel at scale:2  →  pageW / (794 * 2)
+                const mmPerPx = pageW / canvasW;
+                const totalHeightMM = canvasH * mmPerPx;
+
+                if (totalHeightMM <= pageH) {
+                    // Single page — simple add
+                    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, totalHeightMM);
+                } else {
+                    // Multi-page: slice canvas into A4-height chunks
+                    const pageHeightPx = Math.floor(pageH / mmPerPx);
+                    let yOffset = 0;
+
+                    while (yOffset < canvasH) {
+                        const sliceH = Math.min(pageHeightPx, canvasH - yOffset);
+
+                        // Create a temporary canvas for this page slice
+                        const sliceCanvas = document.createElement('canvas');
+                        sliceCanvas.width = canvasW;
+                        sliceCanvas.height = sliceH;
+                        const ctx = sliceCanvas.getContext('2d');
+                        ctx.drawImage(canvas, 0, yOffset, canvasW, sliceH, 0, 0, canvasW, sliceH);
+
+                        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
+                        const sliceHeightMM = sliceH * mmPerPx;
+
+                        if (yOffset > 0) pdf.addPage();
+                        pdf.addImage(sliceData, 'JPEG', 0, 0, pageW, sliceHeightMM);
+
+                        yOffset += sliceH;
+                    }
+                }
+
+                pdf.save(filename);
+                resetButton(btnPdf);
+
+            }).catch(err => {
+                console.error('html2canvas failed:', err);
+                if (document.body.contains(iframe)) document.body.removeChild(iframe);
+                alert('PDF generation failed. Please try again.');
+                resetButton(btnPdf);
+            });
+        }, 600); // 600ms font/image paint delay — enough for mobile WebKit
+    };
+
+    // Use onload for the iframe; fall back to a timeout if it fires instantly
+    iframe.onload = captureFromIframe;
+
+    // Safety net: if onload already fired (srcdoc write), call directly after tick
+    setTimeout(() => {
+        if (iframeDoc.readyState === 'complete' && iframe.onload) {
+            iframe.onload = null;
+            captureFromIframe();
+        }
+    }, 100);
+}
+
+function resetButton(btn) {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
+}
+
 /**
- * Generates structured, MS-Word-friendly HTML code.
- * Word renders tables with explicit widths far better than modern CSS Flex/Grid.
- * We compile the state into a clean single-column or table-aligned Word document.
+ * Builds a fully self-contained HTML string of the CV at its natural 794px
+ * width, with all template CSS inlined and FontAwesome loaded from CDN.
+ * This is what the hidden iframe renders for html2canvas to capture.
  */
-function generateWordHTMLContent() {
-    const primaryColor = '#1e293b';
-    const accentColor = '#6366f1';
-    
-    let html = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-        <title>Resume - ${cvState.fullName || 'Details'}</title>
-        <style>
-            body {
-                font-family: 'Calibri', 'Arial', sans-serif;
-                font-size: 11pt;
-                line-height: 1.35;
-                color: #27272a;
-                margin: 1in;
-            }
-            h1 {
-                font-family: 'Arial', sans-serif;
-                font-size: 24pt;
-                font-weight: bold;
-                color: ${primaryColor};
-                margin: 0 0 4pt 0;
-            }
-            .job-title {
-                font-size: 13pt;
-                font-weight: bold;
-                color: ${accentColor};
-                margin-bottom: 12pt;
-                text-transform: uppercase;
-            }
-            .contact-info {
-                font-size: 10pt;
-                color: #52525b;
-                margin-bottom: 18pt;
-                border-bottom: 1px solid #e4e4e7;
-                padding-bottom: 8pt;
-            }
-            .section-header {
-                font-family: 'Arial', sans-serif;
-                font-size: 14pt;
-                font-weight: bold;
-                text-transform: uppercase;
-                color: ${primaryColor};
-                border-bottom: 2px solid ${accentColor};
-                margin-top: 18pt;
-                margin-bottom: 8pt;
-                padding-bottom: 3pt;
-            }
-            .item-title {
-                font-size: 11pt;
-                font-weight: bold;
-            }
-            .item-meta {
-                font-size: 10pt;
-                color: #52525b;
-                font-style: italic;
-                margin-bottom: 3pt;
-            }
-            .item-desc {
-                font-size: 10.5pt;
-                color: #27272a;
-                margin-bottom: 10pt;
-            }
-            .badge-list {
-                margin-bottom: 10pt;
-            }
-            .badge {
-                background-color: #f4f4f5;
-                border: 1px solid #e4e4e7;
-                padding: 3pt 8pt;
-                font-size: 9.5pt;
-                margin-right: 5pt;
-                margin-bottom: 5pt;
-                display: inline-block;
-            }
-            ul {
-                margin: 0 0 10pt 0;
-                padding-left: 20px;
-            }
-            li {
-                margin-bottom: 3pt;
-                font-size: 10.5pt;
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            td {
-                vertical-align: top;
-            }
-        </style>
-    </head>
-    <body>
-    `;
+function buildSelfContainedCVHTML() {
+    // Get the current CV preview element's outer HTML
+    const cvEl = document.getElementById('cv-preview-document');
+    const cvInnerHTML = cvEl ? cvEl.innerHTML : '';
+    const cvClass = cvEl ? cvEl.className : 'cv-preview-container';
 
-    // 1. Header (Name & Professional Title)
-    html += `<h1>${cvState.fullName || 'Full Name'}</h1>`;
-    if (cvState.jobTitle) {
-        html += `<div class="job-title">${cvState.jobTitle}</div>`;
-    }
+    // Collect all <style> and <link rel="stylesheet"> from the main document
+    // so template CSS is inherited inside the iframe
+    let styleBlocks = '';
 
-    // 2. Contact details horizontally
-    let contactItems = [];
-    if (cvState.phone) contactItems.push(cvState.phone);
-    if (cvState.email) contactItems.push(cvState.email);
-    const location = getFormattedLocation();
-    if (location) contactItems.push(location);
-    if (cvState.linkedin) contactItems.push(`LinkedIn: ${cvState.linkedin}`);
-    if (cvState.github) contactItems.push(`GitHub: ${cvState.github}`);
-    if (cvState.portfolio) contactItems.push(`Portfolio: ${cvState.portfolio}`);
-    
-    if (contactItems.length > 0) {
-        html += `<div class="contact-info">${contactItems.join('  |  ')}</div>`;
-    }
+    // Inline all <style> tags from the parent document
+    document.querySelectorAll('style').forEach(s => {
+        styleBlocks += `<style>${s.innerHTML}</style>`;
+    });
 
-    // 3. Career Objective
-    if (cvState.careerSummary) {
-        html += `<div class="section-header">Professional Summary</div>`;
-        html += `<p class="item-desc">${cvState.careerSummary.replace(/\n/g, '<br>')}</p>`;
-    }
+    // Inline all <link rel="stylesheet"> hrefs (same-origin ones)
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+        styleBlocks += `<link rel="stylesheet" href="${link.href}">`;
+    });
 
-    // 4. Skills
-    if (cvState.techSkills && cvState.techSkills.length > 0) {
-        html += `<div class="section-header">Technical Skills</div>`;
-        html += `<div class="badge-list">`;
-        cvState.techSkills.forEach(skill => {
-            html += `<span class="badge">${skill}</span>`;
-        });
-        html += `</div>`;
-    }
-
-    if (cvState.softSkills && cvState.softSkills.length > 0) {
-        html += `<div class="section-header">Soft Skills</div>`;
-        html += `<div class="badge-list">`;
-        cvState.softSkills.forEach(skill => {
-            html += `<span class="badge">${skill}</span>`;
-        });
-        html += `</div>`;
-    }
-
-    // 5. Work Experience
-    if (cvState.work && cvState.work.length > 0) {
-        html += `<div class="section-header">Professional Experience</div>`;
-        cvState.work.forEach(job => {
-            html += `
-                <table style="margin-bottom: 6pt;">
-                    <tr>
-                        <td class="item-title">${job.title}</td>
-                        <td style="text-align: right; font-weight: bold;">${job.duration}</td>
-                    </tr>
-                    <tr>
-                        <td class="item-meta">${job.company}</td>
-                        <td style="text-align: right;" class="item-meta">${job.location}</td>
-                    </tr>
-                </table>
-                <p class="item-desc">${job.desc ? job.desc.replace(/\n/g, '<br>') : ''}</p>
-            `;
-        });
-    }
-
-    // 6. Education
-    if (cvState.education && cvState.education.length > 0) {
-        html += `<div class="section-header">Education</div>`;
-        cvState.education.forEach(edu => {
-            html += `
-                <table style="margin-bottom: 4pt;">
-                    <tr>
-                        <td class="item-title">${edu.degree}</td>
-                        <td style="text-align: right; font-weight: bold;">${edu.year}</td>
-                    </tr>
-                    <tr>
-                        <td class="item-meta">${edu.institution}${edu.board ? ` (${edu.board})` : ''}</td>
-                        <td style="text-align: right;" class="item-meta">${edu.score}</td>
-                    </tr>
-                </table>
-            `;
-        });
-    }
-
-    // 7. Academic Projects
-    if (cvState.projects && cvState.projects.length > 0) {
-        html += `<div class="section-header">Academic Projects</div>`;
-        cvState.projects.forEach(proj => {
-            let links = [];
-            if (proj.github) links.push(`GitHub: ${proj.github}`);
-            if (proj.demo) links.push(`Live Demo: ${proj.demo}`);
-            const linksStr = links.length > 0 ? ` (${links.join('  |  ')})` : '';
-            
-            html += `
-                <div style="font-weight: bold; font-size: 11pt;">${proj.name} ${proj.tech ? `[${proj.tech}]` : ''}</div>
-                ${linksStr ? `<div class="item-meta">${linksStr}</div>` : ''}
-                <p class="item-desc">${proj.desc ? proj.desc.replace(/\n/g, '<br>') : ''}</p>
-            `;
-        });
-    }
-
-    // 8. Certifications
-    if (cvState.certifications && cvState.certifications.length > 0) {
-        html += `<div class="section-header">Certifications</div>`;
-        html += `<ul>`;
-        cvState.certifications.forEach(cert => {
-            html += `<li>${cert}</li>`;
-        });
-        html += `</ul>`;
-    }
-
-    // 9. Achievements
-    if (cvState.achievements && cvState.achievements.length > 0) {
-        html += `<div class="section-header">Achievements</div>`;
-        html += `<ul>`;
-        cvState.achievements.forEach(ach => {
-            html += `<li>${ach}</li>`;
-        });
-        html += `</ul>`;
-    }
-
-    // 10. Languages & Hobbies
-    if ((cvState.languages && cvState.languages.length > 0) || (cvState.hobbies && cvState.hobbies.length > 0)) {
-        html += `<div class="section-header">Additional Info</div>`;
-        if (cvState.languages && cvState.languages.length > 0) {
-            html += `<p class="item-desc"><strong>Languages:</strong> ${cvState.languages.join(', ')}</p>`;
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- FontAwesome must be present for icons to render -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    ${styleBlocks}
+    <style>
+        /* Ensure iframe body has no margins and white background */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body {
+            width: 794px;
+            min-height: 1123px;
+            background: #ffffff !important;
+            overflow: visible !important;
         }
-        if (cvState.hobbies && cvState.hobbies.length > 0) {
-            html += `<p class="item-desc"><strong>Hobbies & Interests:</strong> ${cvState.hobbies.join(', ')}</p>`;
+        /* Strip any dark-mode vars that might have leaked into the CV */
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --accent-light: #e0e7ff;
+            --border-color: #e2e8f0;
+            --border-hover: #cbd5e1;
         }
-    }
-
-    html += `
-    </body>
-    </html>
-    `;
-
-    return html;
+        .cv-preview-container {
+            width: 794px !important;
+            min-height: 1123px;
+            background: #ffffff !important;
+            box-shadow: none !important;
+            transform: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="cv-root" class="${cvClass}" style="width:794px; background:#ffffff;">
+        ${cvInnerHTML}
+    </div>
+</body>
+</html>`;
 }

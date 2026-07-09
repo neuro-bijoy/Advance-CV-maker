@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="CraftCV - Create professional, recruiter-ready resumes and CVs online in minutes. Beautiful templates, live preview, and easy PDF/Word download.">
+    <meta name="description" content="CraftCV - Create professional, recruiter-ready resumes and CVs online in minutes. Beautiful templates, live preview, and easy PDF download.">
     <title>CraftCV - Professional CV Maker</title>
     
     <!-- Google Fonts -->
@@ -15,7 +15,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- App Stylesheets -->
-    <!-- BUG FIX: styles.css was present but never linked in the original HTML -->
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -51,8 +50,6 @@
                     <h1>Create a Professional Resume in Minutes</h1>
                     <p class="hero-subtitle">Build a modern, job-winning CV with our interactive builder. Stand out from the crowd and land your dream role.</p>
                     <div class="hero-cta">
-                        <!-- BUG FIX: Was <a href="#templates"> which doesn't work when target is in an active-view section.
-                             Changed to a button with JS-powered smooth scroll. -->
                         <button class="btn btn-primary btn-lg" onclick="document.getElementById('templates').scrollIntoView({behavior:'smooth'})">Choose a Template <i class="fa-solid fa-arrow-right"></i></button>
                         <button class="btn btn-secondary btn-lg" id="btn-quick-start">Quick Start <i class="fa-solid fa-bolt"></i></button>
                     </div>
@@ -77,8 +74,8 @@
                     </div>
                     <div class="feature-card">
                         <i class="fa-solid fa-download feature-icon"></i>
-                        <h3>Multi-Format Export</h3>
-                        <p>Download your resume as an ATS-friendly PDF or editable Microsoft Word document.</p>
+                        <h3>PDF Export</h3>
+                        <p>Download your resume as a clean, professional PDF — works on both desktop and mobile.</p>
                     </div>
                     <div class="feature-card">
                         <i class="fa-solid fa-eye-slash feature-icon"></i>
@@ -301,9 +298,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-list-container" id="tech-skills-list">
-                                    <!-- Dynamic items injected here -->
-                                </div>
+                                <div class="dynamic-list-container" id="tech-skills-list"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-tech-skill">
                                     <i class="fa-solid fa-plus"></i> Add Technical Skill
                                 </button>
@@ -317,9 +312,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-list-container" id="soft-skills-list">
-                                    <!-- Dynamic items injected here -->
-                                </div>
+                                <div class="dynamic-list-container" id="soft-skills-list"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-soft-skill">
                                     <i class="fa-solid fa-plus"></i> Add Soft Skill
                                 </button>
@@ -333,9 +326,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-block-container" id="education-blocks">
-                                    <!-- Dynamic blocks injected here -->
-                                </div>
+                                <div class="dynamic-block-container" id="education-blocks"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-education">
                                     <i class="fa-solid fa-plus"></i> Add Education Entry
                                 </button>
@@ -349,9 +340,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-block-container" id="work-blocks">
-                                    <!-- Dynamic blocks injected here -->
-                                </div>
+                                <div class="dynamic-block-container" id="work-blocks"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-work">
                                     <i class="fa-solid fa-plus"></i> Add Work Block
                                 </button>
@@ -365,9 +354,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-block-container" id="project-blocks">
-                                    <!-- Dynamic blocks injected here -->
-                                </div>
+                                <div class="dynamic-block-container" id="project-blocks"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-project">
                                     <i class="fa-solid fa-plus"></i> Add Project Block
                                 </button>
@@ -381,9 +368,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-list-container" id="certifications-list">
-                                    <!-- Dynamic items injected here -->
-                                </div>
+                                <div class="dynamic-list-container" id="certifications-list"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-certification">
                                     <i class="fa-solid fa-plus"></i> Add Certification
                                 </button>
@@ -397,9 +382,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-list-container" id="achievements-list">
-                                    <!-- Dynamic items injected here -->
-                                </div>
+                                <div class="dynamic-list-container" id="achievements-list"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-achievement">
                                     <i class="fa-solid fa-plus"></i> Add Achievement
                                 </button>
@@ -413,9 +396,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-list-container" id="languages-list">
-                                    <!-- Dynamic items injected here -->
-                                </div>
+                                <div class="dynamic-list-container" id="languages-list"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-language">
                                     <i class="fa-solid fa-plus"></i> Add Language
                                 </button>
@@ -429,9 +410,7 @@
                                 <i class="fa-solid fa-chevron-down arrow-icon"></i>
                             </button>
                             <div class="accordion-content">
-                                <div class="dynamic-list-container" id="hobbies-list">
-                                    <!-- Dynamic items injected here -->
-                                </div>
+                                <div class="dynamic-list-container" id="hobbies-list"></div>
                                 <button type="button" class="btn btn-outline btn-sm btn-add-item" id="btn-add-hobby">
                                     <i class="fa-solid fa-plus"></i> Add Hobby/Interest
                                 </button>
@@ -447,7 +426,6 @@
                     <div class="preview-toolbar">
                         <div class="toolbar-left">
                             <span class="preview-status"><span class="pulse-dot"></span> Live Preview</span>
-                            <!-- Template Quick Switcher -->
                             <div class="select-wrapper">
                                 <select id="template-select">
                                     <option value="classic-executive">Classic Executive</option>
@@ -466,22 +444,20 @@
                         </div>
                     </div>
 
-                    <!-- Outer container of CV wrapper (used for scaling/zooming) -->
+                    <!-- CV Preview Scroll Container -->
                     <div class="preview-scroll-container">
                         <div class="cv-scale-wrapper">
-                            
-                            <!-- THE CV PAGE CONTENT (This is exported directly to PDF) -->
                             <div id="cv-preview-document" class="cv-preview-container template-classic-executive">
                                 <!-- CV content dynamically rendered here by JavaScript -->
                             </div>
-                            
                         </div>
                     </div>
 
-                    <!-- Downloader Action Bar -->
+                    <!-- Downloader Action Bar — PDF only -->
                     <div class="downloader-bar">
-                        <button id="btn-download-pdf" class="btn btn-primary"><i class="fa-solid fa-file-pdf"></i> Download PDF</button>
-                        <button id="btn-download-docx" class="btn btn-secondary"><i class="fa-solid fa-file-word"></i> Download Word (.docx)</button>
+                        <button id="btn-download-pdf" class="btn btn-primary btn-lg">
+                            <i class="fa-solid fa-file-pdf"></i> Download PDF
+                        </button>
                     </div>
                 </div>
 
@@ -498,11 +474,10 @@
         </div>
     </footer>
 
-    <!-- Libraries loaded via CDN -->
-    <!-- Html2Pdf bundle includes html2canvas and jsPDF -->
+    <!-- html2pdf bundle includes html2canvas + jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <!-- Application Logic Script -->
+
+    <!-- Application Logic -->
     <script src="app.js"></script>
 </body>
 </html>

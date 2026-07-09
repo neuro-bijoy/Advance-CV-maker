@@ -1544,21 +1544,56 @@ function downloadImage() {
     btn.disabled = true;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 
-    // Remove transform so html2canvas sees the element at its real size
+    // Remove zoom transform so the element sits at its natural 794px width
     const originalTransform = scaleWrapper.style.transform;
     scaleWrapper.style.transform = 'none';
 
-    html2canvas(cvEl, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff',
-        logging: false
-    }).then(canvas => {
-        // Restore zoom
+    // Collect all page <style> blocks so the clone has identical CSS
+    // (this is what fixes the black sidebar — background colours need CSS)
+    let styleText = '';
+    document.querySelectorAll('style').forEach(s => { styleText += s.innerHTML; });
+
+    const cvWidth  = cvEl.scrollWidth;
+    const cvHeight = cvEl.scrollHeight;
+
+    // Build a self-contained SVG that wraps the CV HTML via foreignObject.
+    // Because everything is inlined, there are zero CORS/taint restrictions
+    // and dark backgrounds (like the sidebar) render correctly.
+    const svgData = [
+        '<svg xmlns="http://www.w3.org/2000/svg"',
+        '     width="' + cvWidth + '" height="' + cvHeight + '">',
+        '  <foreignObject width="100%" height="100%">',
+        '    <div xmlns="http://www.w3.org/1999/xhtml">',
+        '      <style>' + styleText + '</style>',
+        '      <div class="' + cvEl.className + '"',
+        '           style="width:' + cvWidth + 'px;background:#fff;overflow:visible;">',
+        cvEl.innerHTML,
+        '      </div>',
+        '    </div>',
+        '  </foreignObject>',
+        '</svg>'
+    ].join('\n');
+
+    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+    const svgUrl  = URL.createObjectURL(svgBlob);
+
+    const img = new Image();
+
+    img.onload = () => {
         scaleWrapper.style.transform = originalTransform;
 
-        // Trigger PNG download
+        const scale  = 3;
+        const canvas = document.createElement('canvas');
+        canvas.width  = cvWidth  * scale;
+        canvas.height = cvHeight * scale;
+
+        const ctx = canvas.getContext('2d');
+        ctx.scale(scale, scale);
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, cvWidth, cvHeight);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(svgUrl);
+
         const link = document.createElement('a');
         link.download = filename;
         link.href = canvas.toDataURL('image/png');
@@ -1566,11 +1601,41 @@ function downloadImage() {
 
         btn.disabled = false;
         btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
-    }).catch(err => {
-        console.error('Image export failed:', err);
-        scaleWrapper.style.transform = originalTransform;
-        alert('Image generation failed. Please try again.');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
-    });
+    };
+
+    // Fallback: if SVG foreignObject is blocked by the browser,
+    // use html2canvas with onclone to force background colours
+    img.onerror = () => {
+        URL.revokeObjectURL(svgUrl);
+
+        html2canvas(cvEl, {
+            scale: 3,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            logging: false,
+            onclone: (clonedDoc) => {
+                clonedDoc.querySelectorAll('*').forEach(el => {
+                    el.style.webkitPrintColorAdjust = 'exact';
+                    el.style.printColorAdjust = 'exact';
+                });
+            }
+        }).then(canvas => {
+            scaleWrapper.style.transform = originalTransform;
+            const link = document.createElement('a');
+            link.download = filename;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
+        }).catch(err => {
+            console.error('Image export failed:', err);
+            scaleWrapper.style.transform = originalTransform;
+            alert('Image generation failed. Please try again.');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
+        });
+    };
+
+    img.src = svgUrl;
 }

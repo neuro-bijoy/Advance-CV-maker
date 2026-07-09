@@ -272,6 +272,18 @@ body {
     display: block;
 }
 
+/* BUG FIX (SCROLL): The editor view needs its own height constraint.
+   When #view-editor is display:block, its height is unconstrained (grows to content),
+   so .editor-workspace height:100% has nothing to resolve against and
+   .editor-column never triggers scrolling.
+   Setting #view-editor to display:flex + height fills the viewport correctly. */
+#view-editor.active-view {
+    display: flex;
+    flex-direction: column;
+    height: calc(100vh - 70px);
+    overflow: hidden;
+}
+
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
@@ -615,12 +627,11 @@ body {
 .editor-workspace {
     display: grid;
     grid-template-columns: 500px 1fr;
-    /* BUG FIX: overflow:hidden on the workspace clipped the editor column,
-       preventing it from scrolling even though .editor-form had overflow-y:auto.
-       Changed to overflow:clip so only content outside the grid is hidden,
-       while each column manages its own scroll independently. */
-    height: calc(100vh - 70px);
-    overflow: clip;
+    /* BUG FIX: Was height:calc(100vh - 70px) + overflow:hidden directly on workspace.
+       Now the parent #view-editor owns the height constraint. This element just fills it. */
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
 }
 
 .editor-column {
@@ -628,11 +639,10 @@ body {
     border-right: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
-    /* BUG FIX: height:100% caused the column to not establish a proper scroll
-       container when the parent had overflow:hidden. Use min-height:0 instead
-       so flex children can shrink and the overflow-y:auto on .editor-form works. */
+    /* BUG FIX: Use overflow:hidden + min-height:0 so the flex child
+       .editor-form can scroll. height:100% is not needed — grid children
+       stretch to fill their row automatically (align-self:stretch default). */
     min-height: 0;
-    height: 100%;
     overflow: hidden;
 }
 
@@ -910,9 +920,6 @@ body {
     background-color: var(--bg-tertiary);
     display: flex;
     flex-direction: column;
-    /* BUG FIX: Same min-height:0 fix needed here so preview-scroll-container
-       can scroll independently without being clipped by the grid parent. */
-    height: 100%;
     min-height: 0;
     overflow: hidden;
     position: relative;
@@ -1589,20 +1596,37 @@ body {
 }
 
 @media (max-width: 900px) {
+    #view-editor.active-view {
+        height: auto;
+        overflow: visible;
+    }
+
     .editor-workspace {
         grid-template-columns: 1fr;
+        flex: none;
         height: auto;
         overflow-y: visible;
+        overflow: visible;
     }
     
     .editor-column {
         height: auto;
+        min-height: unset;
+        overflow: visible;
         border-right: none;
         border-bottom: 1px solid var(--border-color);
+    }
+
+    .editor-form {
+        min-height: unset;
+        overflow-y: visible;
+        height: auto;
     }
     
     .preview-column {
         height: auto;
+        min-height: unset;
+        overflow: visible;
         padding-bottom: 80px;
     }
     

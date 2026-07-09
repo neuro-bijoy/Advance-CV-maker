@@ -1532,11 +1532,11 @@ function setupExportHandlers() {
     const downloadBtn = document.getElementById('btn-download-pdf');
 
     if (downloadBtn) {
-        downloadBtn.addEventListener('click', downloadImage);
+        downloadBtn.addEventListener('click', downloadPDF);
     }
 }
 
-async function downloadImage() {
+async function downloadPDF() {
     const btn = document.getElementById('btn-download-pdf');
     const cvEl = document.getElementById('cv-preview-document');
     const scaleWrapper = document.querySelector('.cv-scale-wrapper');
@@ -1547,13 +1547,18 @@ async function downloadImage() {
     }
 
     if (typeof html2canvas === 'undefined') {
-        alert('Image download library is not loaded. Please check your internet connection and reload the page.');
+        alert('PDF download library is not loaded. Please check your internet connection and reload the page.');
+        return;
+    }
+
+    if (!window.jspdf || !window.jspdf.jsPDF) {
+        alert('PDF generator is not loaded. Please check your internet connection and reload the page.');
         return;
     }
 
     const fullName = (cvState.fullName || 'craftcv_resume').trim();
     const safeName = fullName.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').toLowerCase();
-    const filename = `resume_${safeName || 'craftcv_resume'}.png`;
+    const filename = `resume_${safeName || 'craftcv_resume'}.pdf`;
 
     const originalBtnHTML = btn.innerHTML;
     const originalDisabled = btn.disabled;
@@ -1597,24 +1602,43 @@ async function downloadImage() {
             }
         });
 
-        const imageUrl = canvas.toDataURL('image/png');
+        const imageUrl = canvas.toDataURL('image/jpeg', 0.98);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
 
-        const link = document.createElement('a');
-        link.href = imageUrl;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const imageWidth = pageWidth;
+        const imageHeight = (canvas.height * imageWidth) / canvas.width;
+
+        if (imageHeight <= pageHeight) {
+            pdf.addImage(imageUrl, 'JPEG', 0, 0, imageWidth, imageHeight);
+        } else {
+            let remainingHeight = imageHeight;
+            let yPosition = 0;
+
+            while (remainingHeight > 0) {
+                pdf.addImage(imageUrl, 'JPEG', 0, yPosition, imageWidth, imageHeight);
+                remainingHeight -= pageHeight;
+                yPosition -= pageHeight;
+
+                if (remainingHeight > 0) {
+                    pdf.addPage();
+                }
+            }
+        }
+
+        pdf.save(filename);
 
     } catch (err) {
-        console.error('Image export failed:', err);
-        alert('Image generation failed. Please reload the page and try again.');
+        console.error('PDF export failed:', err);
+        alert('PDF generation failed. Please reload the page and try again.');
     } finally {
         if (scaleWrapper) {
             scaleWrapper.style.transform = originalTransform;
         }
 
         btn.disabled = originalDisabled;
-        btn.innerHTML = originalBtnHTML || '<i class="fa-solid fa-image"></i> Download Image';
+        btn.innerHTML = originalBtnHTML || '<i class="fa-solid fa-file-pdf"></i> Download PDF';
     }
 }

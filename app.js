@@ -1521,121 +1521,100 @@ function renderWarmSlateTemplate(container) {
 }
 
 // ==========================================================================
-// IMAGE EXPORT — High Resolution PNG Download
+// IMAGE EXPORT â€” High Resolution PNG Download
 //
 // Uses html2canvas directly on the live CV element.
 // Temporarily removes the CSS transform so the element is captured
 // at its natural 794px width, then restores it after download.
-// Scale of 3 gives ~2382px wide output — sharp on any screen or printer.
+// Scale of 3 gives ~2382px wide output â€” sharp on any screen or printer.
 // ==========================================================================
 function setupExportHandlers() {
-    document.getElementById('btn-download-pdf').addEventListener('click', () => {
-        downloadImage();
-    });
+    const downloadBtn = document.getElementById('btn-download-pdf');
+
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', downloadImage);
+    }
 }
 
-function downloadImage() {
+async function downloadImage() {
     const btn = document.getElementById('btn-download-pdf');
     const cvEl = document.getElementById('cv-preview-document');
     const scaleWrapper = document.querySelector('.cv-scale-wrapper');
-    const fullName = cvState.fullName || 'craftcv_resume';
-    const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.png`;
 
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+    if (!btn || !cvEl) {
+        alert('CV preview not found.');
+        return;
+    }
 
-    // Remove zoom transform so the element sits at its natural 794px width
-    const originalTransform = scaleWrapper.style.transform;
-    scaleWrapper.style.transform = 'none';
+    if (typeof html2canvas === 'undefined') {
+        alert('Image download library is not loaded. Please check your internet connection and reload the page.');
+        return;
+    }
 
-    // Collect all page <style> blocks so the clone has identical CSS
-    // (this is what fixes the black sidebar — background colours need CSS)
-    let styleText = '';
-    document.querySelectorAll('style').forEach(s => { styleText += s.innerHTML; });
+    const fullName = (cvState.fullName || 'craftcv_resume').trim();
+    const safeName = fullName.replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').toLowerCase();
+    const filename = `resume_${safeName || 'craftcv_resume'}.png`;
 
-    const cvWidth  = cvEl.scrollWidth;
-    const cvHeight = cvEl.scrollHeight;
+    const originalBtnHTML = btn.innerHTML;
+    const originalDisabled = btn.disabled;
+    const originalTransform = scaleWrapper ? scaleWrapper.style.transform : '';
 
-    // Build a self-contained SVG that wraps the CV HTML via foreignObject.
-    // Because everything is inlined, there are zero CORS/taint restrictions
-    // and dark backgrounds (like the sidebar) render correctly.
-    const svgData = [
-        '<svg xmlns="http://www.w3.org/2000/svg"',
-        '     width="' + cvWidth + '" height="' + cvHeight + '">',
-        '  <foreignObject width="100%" height="100%">',
-        '    <div xmlns="http://www.w3.org/1999/xhtml">',
-        '      <style>' + styleText + '</style>',
-        '      <div class="' + cvEl.className + '"',
-        '           style="width:' + cvWidth + 'px;background:#fff;overflow:visible;">',
-        cvEl.innerHTML,
-        '      </div>',
-        '    </div>',
-        '  </foreignObject>',
-        '</svg>'
-    ].join('\n');
+    try {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 
-    const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-    const svgUrl  = URL.createObjectURL(svgBlob);
+        if (document.fonts && document.fonts.ready) {
+            await document.fonts.ready;
+        }
 
-    const img = new Image();
+        if (scaleWrapper) {
+            scaleWrapper.style.transform = 'none';
+        }
 
-    img.onload = () => {
-        scaleWrapper.style.transform = originalTransform;
+        await new Promise(resolve => setTimeout(resolve, 150));
 
-        const scale  = 3;
-        const canvas = document.createElement('canvas');
-        canvas.width  = cvWidth  * scale;
-        canvas.height = cvHeight * scale;
-
-        const ctx = canvas.getContext('2d');
-        ctx.scale(scale, scale);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, cvWidth, cvHeight);
-        ctx.drawImage(img, 0, 0);
-        URL.revokeObjectURL(svgUrl);
-
-        const link = document.createElement('a');
-        link.download = filename;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
-    };
-
-    // Fallback: if SVG foreignObject is blocked by the browser,
-    // use html2canvas with onclone to force background colours
-    img.onerror = () => {
-        URL.revokeObjectURL(svgUrl);
-
-        html2canvas(cvEl, {
+        const canvas = await html2canvas(cvEl, {
             scale: 3,
+            backgroundColor: '#ffffff',
             useCORS: true,
             allowTaint: true,
-            backgroundColor: '#ffffff',
             logging: false,
+            windowWidth: cvEl.scrollWidth,
+            windowHeight: cvEl.scrollHeight,
             onclone: (clonedDoc) => {
+                const clonedCv = clonedDoc.getElementById('cv-preview-document');
+
+                if (clonedCv) {
+                    clonedCv.style.transform = 'none';
+                    clonedCv.style.boxShadow = 'none';
+                    clonedCv.style.backgroundColor = '#ffffff';
+                }
+
                 clonedDoc.querySelectorAll('*').forEach(el => {
                     el.style.webkitPrintColorAdjust = 'exact';
                     el.style.printColorAdjust = 'exact';
                 });
             }
-        }).then(canvas => {
-            scaleWrapper.style.transform = originalTransform;
-            const link = document.createElement('a');
-            link.download = filename;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
-        }).catch(err => {
-            console.error('Image export failed:', err);
-            scaleWrapper.style.transform = originalTransform;
-            alert('Image generation failed. Please try again.');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
         });
-    };
 
-    img.src = svgUrl;
+        const imageUrl = canvas.toDataURL('image/png');
+
+        const link = document.createElement('a');
+        link.href = imageUrl;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+    } catch (err) {
+        console.error('Image export failed:', err);
+        alert('Image generation failed. Please reload the page and try again.');
+    } finally {
+        if (scaleWrapper) {
+            scaleWrapper.style.transform = originalTransform;
+        }
+
+        btn.disabled = originalDisabled;
+        btn.innerHTML = originalBtnHTML || '<i class="fa-solid fa-image"></i> Download Image';
+    }
 }

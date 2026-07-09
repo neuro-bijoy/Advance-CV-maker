@@ -36,7 +36,7 @@ let previewZoom = 1.0;
 const demoData = {
     selectedTemplate: 'classic-executive',
     photo: '',
-    fullName: 'Riya Sharma',
+    fullName: 'Ronaldo Sarkar',
     jobTitle: 'Computer Science Graduate',
     phone: '+91-98765432XX',
     email: 'riya.sharma@email.com',

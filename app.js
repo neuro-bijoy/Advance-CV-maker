@@ -1521,73 +1521,56 @@ function renderWarmSlateTemplate(container) {
 }
 
 // ==========================================================================
-// PDF EXPORT
+// IMAGE EXPORT — High Resolution PNG Download
 //
-// KEY INSIGHT from working reference project:
-//   - Capture the LIVE element directly (no clone needed)
-//   - Temporarily set transform to 'none' so html2canvas sees full 794px width
-//   - Restore transform in .then() and .catch()
-//   - Do NOT use scrollX/scrollY or windowWidth overrides — they confuse
-//     html2canvas when the element is already at its natural size
+// Uses html2canvas directly on the live CV element.
+// Temporarily removes the CSS transform so the element is captured
+// at its natural 794px width, then restores it after download.
+// Scale of 3 gives ~2382px wide output — sharp on any screen or printer.
 // ==========================================================================
 function setupExportHandlers() {
     document.getElementById('btn-download-pdf').addEventListener('click', () => {
-        downloadPDF();
+        downloadImage();
     });
 }
 
-function downloadPDF() {
-    const btnPdf = document.getElementById('btn-download-pdf');
-    const docElement = document.getElementById('cv-preview-document');
+function downloadImage() {
+    const btn = document.getElementById('btn-download-pdf');
+    const cvEl = document.getElementById('cv-preview-document');
     const scaleWrapper = document.querySelector('.cv-scale-wrapper');
     const fullName = cvState.fullName || 'craftcv_resume';
-    const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
+    const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.png`;
 
-    // Disable button and show loading state
-    btnPdf.disabled = true;
-    btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 
-    // Save current transform and remove it so html2canvas
-    // captures the element at its real 794px width, not a scaled version
+    // Remove transform so html2canvas sees the element at its real size
     const originalTransform = scaleWrapper.style.transform;
     scaleWrapper.style.transform = 'none';
 
-    const opt = {
-        margin: 0,
-        filename: filename,
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: {
-            scale: 2,
-            useCORS: true,
-            letterRendering: true,
-            backgroundColor: '#ffffff',
-            logging: false
-        },
-        jsPDF: {
-            unit: 'mm',
-            format: 'a4',
-            orientation: 'portrait'
-        }
-    };
+    html2canvas(cvEl, {
+        scale: 3,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff',
+        logging: false
+    }).then(canvas => {
+        // Restore zoom
+        scaleWrapper.style.transform = originalTransform;
 
-    html2pdf()
-        .from(docElement)
-        .set(opt)
-        .save()
-        .then(() => {
-            // Restore the zoom transform after successful export
-            scaleWrapper.style.transform = originalTransform;
-            resetButton(btnPdf);
-        })
-        .catch(err => {
-            console.error('PDF export failed:', err);
-            scaleWrapper.style.transform = originalTransform;
-            alert('PDF generation failed. Please try again.');
-            resetButton(btnPdf);
-        });
-}
+        // Trigger PNG download
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
 
-function resetButton(btn) {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
+    }).catch(err => {
+        console.error('Image export failed:', err);
+        scaleWrapper.style.transform = originalTransform;
+        alert('Image generation failed. Please try again.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-image"></i> Download Image';
+    });
 }

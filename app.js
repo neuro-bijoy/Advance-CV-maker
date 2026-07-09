@@ -1623,39 +1623,46 @@ function setupExportHandlers() {
     btnPdf.addEventListener('click', () => {
         const docElement = document.getElementById('cv-preview-document');
         const fullName = cvState.fullName || 'craftcv_resume';
-        
-        // Remove scale transform before export
-        const scaleWrapper = document.querySelector('.cv-scale-wrapper');
-        const originalTransform = scaleWrapper.style.transform;
-        scaleWrapper.style.transform = 'none';
 
-        // Temporarily make element visible at full size for html2canvas capture
-        const originalPosition = docElement.style.position;
-        docElement.style.position = 'relative';
+        // --- BLANK PDF FIX ---
+        // html2canvas cannot reliably capture elements inside:
+        //   - CSS transform parents (.cv-scale-wrapper has scale())
+        //   - overflow:hidden scroll containers
+        // Solution: Clone the CV node, attach it directly to <body> with
+        // fixed positioning OFF-SCREEN, capture the clone, then remove it.
+        const clone = docElement.cloneNode(true);
+        clone.style.position = 'fixed';
+        clone.style.top = '0';
+        clone.style.left = '-9999px';
+        clone.style.width = '794px';
+        clone.style.minHeight = '1123px';
+        clone.style.zIndex = '-1';
+        clone.style.transform = 'none';
+        clone.style.overflow = 'visible';
+        document.body.appendChild(clone);
 
         const opt = {
             margin:      0,
             filename:    `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
             image:       { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-                scale: 2, 
-                useCORS: true, 
+            html2canvas: {
+                scale: 2,
+                useCORS: true,
+                allowTaint: true,
                 letterRendering: true,
                 logging: false,
-                allowTaint: true
+                width: 794,
+                windowWidth: 794
             },
-            jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            // SINGLE PAGE FIX: prevent any page breaks inside the CV
-            pagebreak:   { mode: 'avoid-all', before: '#page-break', avoid: '.cv-preview-container' }
+            jsPDF:     { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: 'avoid-all' }
         };
 
-        html2pdf().set(opt).from(docElement).save().then(() => {
-            scaleWrapper.style.transform = originalTransform;
-            docElement.style.position = originalPosition;
+        html2pdf().set(opt).from(clone).save().then(() => {
+            document.body.removeChild(clone);
         }).catch(err => {
             console.error('PDF export failed', err);
-            scaleWrapper.style.transform = originalTransform;
-            docElement.style.position = originalPosition;
+            document.body.removeChild(clone);
         });
     });
 

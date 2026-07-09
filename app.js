@@ -1619,50 +1619,104 @@ function setupExportHandlers() {
     const btnPdf = document.getElementById('btn-download-pdf');
     const btnDocx = document.getElementById('btn-download-docx');
 
-    // PDF download using html2pdf.js
+    // PDF download - uses html2canvas + jsPDF directly (NOT html2pdf wrapper)
+    // This approach works on ALL devices including mobile because:
+    // 1. Clone is placed at top:0 left:0 VISIBLE on screen (mobile won't render off-screen)
+    // 2. A full-screen overlay hides it from the user during capture
+    // 3. html2canvas captures it, jsPDF saves it — no wrapper quirks
     btnPdf.addEventListener('click', () => {
         const docElement = document.getElementById('cv-preview-document');
         const fullName = cvState.fullName || 'craftcv_resume';
+        const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
 
-        // --- BLANK PDF FIX ---
-        // html2canvas cannot reliably capture elements inside:
-        //   - CSS transform parents (.cv-scale-wrapper has scale())
-        //   - overflow:hidden scroll containers
-        // Solution: Clone the CV node, attach it directly to <body> with
-        // fixed positioning OFF-SCREEN, capture the clone, then remove it.
+        // Show a loading indicator
+        btnPdf.disabled = true;
+        btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
+
+        // Create overlay to hide the clone from user view
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:99998;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;font-family:sans-serif;';
+        overlay.innerHTML = '<div>Generating PDF, please wait...</div>';
+        document.body.appendChild(overlay);
+
+        // Clone the CV and place it at top-left VISIBLE (mobile requirement)
         const clone = docElement.cloneNode(true);
-        clone.style.position = 'fixed';
-        clone.style.top = '0';
-        clone.style.left = '-9999px';
-        clone.style.width = '794px';
-        clone.style.minHeight = '1123px';
-        clone.style.zIndex = '-1';
-        clone.style.transform = 'none';
-        clone.style.overflow = 'visible';
+        clone.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 794px;
+            min-height: 1123px;
+            z-index: 99999;
+            transform: none;
+            overflow: visible;
+            background: #fff;
+        `;
         document.body.appendChild(clone);
 
-        const opt = {
-            margin:      0,
-            filename:    `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
-            image:       { type: 'jpeg', quality: 0.98 },
-            html2canvas: {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                letterRendering: true,
-                logging: false,
-                width: 794,
-                windowWidth: 794
-            },
-            jsPDF:     { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak: { mode: 'avoid-all' }
-        };
+        // Wait one frame for browser to paint the clone
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    letterRendering: true,
+                    logging: false,
+                    width: 794,
+                    height: clone.scrollHeight,
+                    windowWidth: 794
+                }).then(canvas => {
+                    // Remove clone and overlay immediately after capture
+                    document.body.removeChild(clone);
+                    document.body.removeChild(overlay);
 
-        html2pdf().set(opt).from(clone).save().then(() => {
-            document.body.removeChild(clone);
-        }).catch(err => {
-            console.error('PDF export failed', err);
-            document.body.removeChild(clone);
+                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+                    // Access jsPDF — html2pdf bundle exposes it as window.jspdf.jsPDF
+                    // Fallback to window.jsPDF for older bundle versions
+                    const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+                    if (!jsPDFConstructor) {
+                        alert('PDF library not loaded. Please refresh and try again.');
+                        btnPdf.disabled = false;
+                        btnPdf.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
+                        return;
+                    }
+                    const pdf = new jsPDFConstructor({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+                    const pageW = pdf.internal.pageSize.getWidth();   // 210mm
+                    const pageH = pdf.internal.pageSize.getHeight();  // 297mm
+
+                    const canvasW = canvas.width;
+                    const canvasH = canvas.height;
+
+                    // Scale image to fit page width exactly
+                    const imgH = (canvasH / canvasW) * pageW;
+
+                    if (imgH <= pageH) {
+                        // Fits on one page
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pageW, imgH);
+                    } else {
+                        // Content taller than one page — scale down to fit
+                        const scale = pageH / imgH;
+                        pdf.addImage(imgData, 'JPEG', 0, 0, pageW * scale, pageH);
+                    }
+
+                    pdf.save(filename);
+
+                    // Restore button
+                    btnPdf.disabled = false;
+                    btnPdf.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
+
+                }).catch(err => {
+                    console.error('PDF capture failed:', err);
+                    if (document.body.contains(clone)) document.body.removeChild(clone);
+                    if (document.body.contains(overlay)) document.body.removeChild(overlay);
+                    btnPdf.disabled = false;
+                    btnPdf.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
+                    alert('PDF generation failed. Please try again.');
+                });
+            }, 300); // 300ms delay ensures clone is fully painted
         });
     });
 

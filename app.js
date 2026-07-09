@@ -1521,31 +1521,16 @@ function renderWarmSlateTemplate(container) {
 }
 
 // ==========================================================================
-// PDF EXPORT — ROBUST CROSS-DEVICE IMPLEMENTATION
+// PDF EXPORT — FIXED IMPLEMENTATION
 //
-// ROOT CAUSES OF FAILURES:
-//   Desktop: jsPDF constructor path differed between html2pdf bundle versions.
-//   Mobile:  html2canvas cannot render elements that are:
-//            (a) inside overflow:hidden parents, or
-//            (b) scaled via CSS transform, or
-//            (c) positioned off-screen (negative coords on some WebKit builds).
-//
-// FIX STRATEGY:
-//   1. Build a FULL COPY of the CV HTML as a self-contained string (inline all
-//      template CSS + FontAwesome CDN link so the clone renders identically).
-//   2. Open that string in a hidden <iframe> that is ON-SCREEN (1px × 1px,
-//      opacity:0, pointer-events:none) so mobile WebKit renders it fully.
-//   3. Wait for the iframe's load event, then call html2canvas on the iframe's
-//      document body — which is guaranteed to be fully laid out at 794px width
-//      with no transforms or clipping.
-//   4. After capture, remove the iframe and save the PDF.
-//
-// This approach avoids every known mobile blank-page failure mode.
+// Uses html2pdf.js (already bundled in the project) directly on a clean
+// off-screen clone of the CV element. This avoids:
+//   - iframe onload race conditions (old approach)
+//   - html2canvas failing on CSS transform:scale() elements (old approach)
+//   - jsPDF constructor path issues across bundle versions (old approach)
 // ==========================================================================
 function setupExportHandlers() {
-    const btnPdf = document.getElementById('btn-download-pdf');
-
-    btnPdf.addEventListener('click', () => {
+    document.getElementById('btn-download-pdf').addEventListener('click', () => {
         downloadPDF();
     });
 }
@@ -1555,216 +1540,80 @@ function downloadPDF() {
     const fullName = cvState.fullName || 'craftcv_resume';
     const filename = `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`;
 
-    // Disable button, show loading state
+    // Disable button and show loading state
     btnPdf.disabled = true;
     btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Generating...';
 
-    // Build the full self-contained HTML for the CV
-    const cvHTML = buildSelfContainedCVHTML();
+    // Clone the live CV preview element so we can strip transforms safely
+    const cvEl = document.getElementById('cv-preview-document');
+    const clone = cvEl.cloneNode(true);
 
-    // Create a hidden on-screen iframe (must be visible for mobile to render)
-    const iframe = document.createElement('iframe');
-    iframe.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 794px;
-        height: 1px;
-        opacity: 0;
-        pointer-events: none;
-        border: none;
-        z-index: -1;
+    // Position the clone off-screen but still rendered (not display:none)
+    // so html2canvas can measure and capture it correctly
+    clone.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: -9999px !important;
+        width: 794px !important;
+        min-height: 1123px !important;
+        background: #ffffff !important;
+        box-shadow: none !important;
+        transform: none !important;
+        overflow: visible !important;
+        z-index: -9999 !important;
+        pointer-events: none !important;
     `;
-    document.body.appendChild(iframe);
 
-    // Write the HTML into the iframe
-    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-    iframeDoc.open();
-    iframeDoc.write(cvHTML);
-    iframeDoc.close();
+    document.body.appendChild(clone);
 
-    // Wait for iframe content (images, fonts) to fully load
-    const captureFromIframe = () => {
-        const cvBody = iframeDoc.body;
-        const cvRoot = iframeDoc.getElementById('cv-root');
-        const targetEl = cvRoot || cvBody;
-
-        // Give fonts an extra moment to paint on mobile
+    // Give the browser one paint cycle to render the clone before capturing
+    requestAnimationFrame(() => {
         setTimeout(() => {
-            html2canvas(targetEl, {
-                scale: 2,
-                useCORS: true,
-                allowTaint: true,
-                letterRendering: true,
-                logging: false,
-                width: 794,
-                height: targetEl.scrollHeight,
-                windowWidth: 794,
-                windowHeight: targetEl.scrollHeight,
-                scrollX: 0,
-                scrollY: 0,
-                // Explicitly set background so mobile doesn't produce transparent/black
-                backgroundColor: '#ffffff'
-            }).then(canvas => {
-                // Clean up iframe immediately after capture
-                document.body.removeChild(iframe);
-
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-
-                // Resolve jsPDF constructor across bundle versions
-                const jsPDFConstructor = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
-                if (!jsPDFConstructor) {
-                    alert('PDF library failed to load. Please refresh the page and try again.');
-                    resetButton(btnPdf);
-                    return;
-                }
-
-                const pdf = new jsPDFConstructor({
+            const opt = {
+                margin: 0,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.97 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: 794,
+                    windowWidth: 794,
+                    logging: false,
+                    // Scroll offsets must be 0 for the off-screen clone
+                    scrollX: 0,
+                    scrollY: 0
+                },
+                jsPDF: {
                     unit: 'mm',
                     format: 'a4',
                     orientation: 'portrait'
-                });
+                },
+                pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+            };
 
-                const pageW = pdf.internal.pageSize.getWidth();   // 210mm
-                const pageH = pdf.internal.pageSize.getHeight();  // 297mm
-
-                // canvas.width & canvas.height are in physical pixels (scale:2)
-                // We need to figure out how many A4 pages the content spans
-                const canvasW = canvas.width;
-                const canvasH = canvas.height;
-
-                // mm per pixel at scale:2  →  pageW / (794 * 2)
-                const mmPerPx = pageW / canvasW;
-                const totalHeightMM = canvasH * mmPerPx;
-
-                if (totalHeightMM <= pageH) {
-                    // Single page — simple add
-                    pdf.addImage(imgData, 'JPEG', 0, 0, pageW, totalHeightMM);
-                } else {
-                    // Multi-page: slice canvas into A4-height chunks
-                    const pageHeightPx = Math.floor(pageH / mmPerPx);
-                    let yOffset = 0;
-
-                    while (yOffset < canvasH) {
-                        const sliceH = Math.min(pageHeightPx, canvasH - yOffset);
-
-                        // Create a temporary canvas for this page slice
-                        const sliceCanvas = document.createElement('canvas');
-                        sliceCanvas.width = canvasW;
-                        sliceCanvas.height = sliceH;
-                        const ctx = sliceCanvas.getContext('2d');
-                        ctx.drawImage(canvas, 0, yOffset, canvasW, sliceH, 0, 0, canvasW, sliceH);
-
-                        const sliceData = sliceCanvas.toDataURL('image/jpeg', 0.95);
-                        const sliceHeightMM = sliceH * mmPerPx;
-
-                        if (yOffset > 0) pdf.addPage();
-                        pdf.addImage(sliceData, 'JPEG', 0, 0, pageW, sliceHeightMM);
-
-                        yOffset += sliceH;
+            html2pdf()
+                .set(opt)
+                .from(clone)
+                .save()
+                .then(() => {
+                    document.body.removeChild(clone);
+                    resetButton(btnPdf);
+                })
+                .catch(err => {
+                    console.error('PDF generation failed:', err);
+                    if (document.body.contains(clone)) {
+                        document.body.removeChild(clone);
                     }
-                }
-
-                pdf.save(filename);
-                resetButton(btnPdf);
-
-            }).catch(err => {
-                console.error('html2canvas failed:', err);
-                if (document.body.contains(iframe)) document.body.removeChild(iframe);
-                alert('PDF generation failed. Please try again.');
-                resetButton(btnPdf);
-            });
-        }, 600); // 600ms font/image paint delay — enough for mobile WebKit
-    };
-
-    // Use onload for the iframe; fall back to a timeout if it fires instantly
-    iframe.onload = captureFromIframe;
-
-    // Safety net: if onload already fired (srcdoc write), call directly after tick
-    setTimeout(() => {
-        if (iframeDoc.readyState === 'complete' && iframe.onload) {
-            iframe.onload = null;
-            captureFromIframe();
-        }
-    }, 100);
+                    alert('PDF generation failed. Please try again.');
+                    resetButton(btnPdf);
+                });
+        }, 300);
+    });
 }
 
 function resetButton(btn) {
     btn.disabled = false;
     btn.innerHTML = '<i class="fa-solid fa-file-pdf"></i> Download PDF';
-}
-
-/**
- * Builds a fully self-contained HTML string of the CV at its natural 794px
- * width, with all template CSS inlined and FontAwesome loaded from CDN.
- * This is what the hidden iframe renders for html2canvas to capture.
- */
-function buildSelfContainedCVHTML() {
-    // Get the current CV preview element's outer HTML
-    const cvEl = document.getElementById('cv-preview-document');
-    const cvInnerHTML = cvEl ? cvEl.innerHTML : '';
-    const cvClass = cvEl ? cvEl.className : 'cv-preview-container';
-
-    // Collect all <style> and <link rel="stylesheet"> from the main document
-    // so template CSS is inherited inside the iframe
-    let styleBlocks = '';
-
-    // Inline all <style> tags from the parent document
-    document.querySelectorAll('style').forEach(s => {
-        styleBlocks += `<style>${s.innerHTML}</style>`;
-    });
-
-    // Inline all <link rel="stylesheet"> hrefs (same-origin ones)
-    document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
-        styleBlocks += `<link rel="stylesheet" href="${link.href}">`;
-    });
-
-    return `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- FontAwesome must be present for icons to render -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    ${styleBlocks}
-    <style>
-        /* Ensure iframe body has no margins and white background */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body {
-            width: 794px;
-            min-height: 1123px;
-            background: #ffffff !important;
-            overflow: visible !important;
-        }
-        /* Strip any dark-mode vars that might have leaked into the CV */
-        :root {
-            --bg-primary: #f8fafc;
-            --bg-secondary: #ffffff;
-            --bg-tertiary: #f1f5f9;
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --text-muted: #94a3b8;
-            --accent-color: #6366f1;
-            --accent-hover: #4f46e5;
-            --accent-light: #e0e7ff;
-            --border-color: #e2e8f0;
-            --border-hover: #cbd5e1;
-        }
-        .cv-preview-container {
-            width: 794px !important;
-            min-height: 1123px;
-            background: #ffffff !important;
-            box-shadow: none !important;
-            transform: none !important;
-        }
-    </style>
-</head>
-<body>
-    <div id="cv-root" class="${cvClass}" style="width:794px; background:#ffffff;">
-        ${cvInnerHTML}
-    </div>
-</body>
-</html>`;
 }

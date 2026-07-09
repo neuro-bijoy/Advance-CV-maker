@@ -1624,26 +1624,42 @@ function setupExportHandlers() {
         const docElement = document.getElementById('cv-preview-document');
         const fullName = cvState.fullName || 'craftcv_resume';
         
-        // Remove scale transform before export to ensure normal sizing
+        // Remove scale transform before export
         const scaleWrapper = document.querySelector('.cv-scale-wrapper');
         const originalTransform = scaleWrapper.style.transform;
         scaleWrapper.style.transform = 'none';
 
+        // SINGLE-PAGE FIX: Temporarily clamp the CV to exact A4 pixel height.
+        // min-height lets it grow beyond one page; height:1123px locks it to one page.
+        const originalHeight = docElement.style.height;
+        const originalMinHeight = docElement.style.minHeight;
+        const originalOverflow = docElement.style.overflow;
+        docElement.style.height = '1123px';
+        docElement.style.minHeight = '1123px';
+        docElement.style.overflow = 'hidden';
+
         const opt = {
-            margin:       0,
-            filename:     `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            margin:      0,
+            filename:    `resume_${fullName.replace(/\s+/g, '_').toLowerCase()}.pdf`,
+            image:       { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2, useCORS: true, letterRendering: true, width: 794, height: 1123 },
+            jsPDF:       { unit: 'px', format: [794, 1123], orientation: 'portrait', hotfixes: ['px_scaling'] },
+            pagebreak:   { mode: 'avoid-all' }
         };
 
         // Execute PDF compilation
         html2pdf().from(docElement).set(opt).save().then(() => {
-            // Restore scale factor
+            // Restore everything
             scaleWrapper.style.transform = originalTransform;
+            docElement.style.height = originalHeight;
+            docElement.style.minHeight = originalMinHeight;
+            docElement.style.overflow = originalOverflow;
         }).catch(err => {
             console.error('PDF export failed', err);
             scaleWrapper.style.transform = originalTransform;
+            docElement.style.height = originalHeight;
+            docElement.style.minHeight = originalMinHeight;
+            docElement.style.overflow = originalOverflow;
         });
     });
 

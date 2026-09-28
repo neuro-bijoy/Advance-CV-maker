@@ -36,7 +36,7 @@ let previewZoom = 1.0;
 const demoData = {
     selectedTemplate: 'classic-executive',
     photo: '',
-    fullName: 'Ronaldo Sarkar',
+    fullName: 'Arjun Mehta',
     jobTitle: 'Computer Science Graduate',
     phone: '+91-98765432XX',
     email: 'riya.sharma@email.com',
@@ -768,6 +768,9 @@ function updatePreview() {
             break;
         case 'warm-slate':
             renderWarmSlateTemplate(previewContainer);
+            break;
+        case 'academic-classic':
+            renderAcademicTemplate(previewContainer);
             break;
     }
 }
@@ -1520,6 +1523,239 @@ function renderWarmSlateTemplate(container) {
     container.appendChild(sidePane);
 }
 
+
+// RENDER: TEMPLATE 5 - ACADEMIC CLASSIC
+// Clean single-column academic CV: centered name header, inline contact row,
+// bold+underline section titles, right-aligned dates, italic institution,
+// circle-bullet (◦) points, declaration footer.
+function renderAcademicTemplate(container) {
+    container.style.fontFamily = "'Garamond', 'Georgia', serif";
+    container.style.color = '#111';
+    container.style.padding = '40px 48px';
+    container.style.lineHeight = '1.45';
+    container.style.fontSize = '13px';
+    container.style.background = '#fff';
+
+    // ── Header: Name ──
+    const header = document.createElement('div');
+    header.style.cssText = 'text-align:center; margin-bottom:10px;';
+
+    if (cvState.fullName) {
+        const h1 = document.createElement('div');
+        h1.style.cssText = 'font-size:26px; font-weight:700; letter-spacing:0.5px; margin-bottom:6px; font-family:inherit;';
+        h1.textContent = cvState.fullName;
+        header.appendChild(h1);
+    }
+
+    // Contact row inline with bullet separators
+    const contactParts = [];
+    if (cvState.email)    contactParts.push('\u2709 ' + cvState.email);
+    if (cvState.phone)    contactParts.push('\u2706 ' + cvState.phone);
+    if (cvState.linkedin) contactParts.push('in ' + cvState.linkedin);
+    if (cvState.github)   contactParts.push(cvState.github);
+    const loc = getFormattedLocation();
+    if (loc) contactParts.push(loc);
+
+    if (contactParts.length > 0) {
+        const contactRow = document.createElement('div');
+        contactRow.style.cssText = 'font-size:11.5px; color:#222; font-family:"Arial",sans-serif;';
+        contactRow.textContent = contactParts.join('  \u2022  ');
+        header.appendChild(contactRow);
+    }
+    container.appendChild(header);
+
+    // Helper: add a section block
+    const addSection = (title, renderFn) => {
+        const section = document.createElement('div');
+        section.style.cssText = 'margin-top:14px;';
+        const titleEl = document.createElement('div');
+        titleEl.style.cssText = 'font-size:13.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.8px; padding-bottom:3px; border-bottom:1.5px solid #111; margin-bottom:8px; font-family:"Arial",sans-serif;';
+        titleEl.textContent = title;
+        section.appendChild(titleEl);
+        renderFn(section);
+        container.appendChild(section);
+    };
+
+    // Helper: right-float date span
+    const makeDateSpan = (text) => {
+        const s = document.createElement('span');
+        s.style.cssText = 'float:right; font-weight:400; font-size:12px; font-family:"Arial",sans-serif;';
+        s.textContent = text;
+        return s;
+    };
+    const clearfix = () => { const d = document.createElement('div'); d.style.clear = 'both'; return d; };
+
+    // Helper: circle-bullet list
+    const makeBulletList = (lines) => {
+        const ul = document.createElement('ul');
+        ul.style.cssText = 'margin:2px 0 0 0; padding-left:0; list-style:none;';
+        lines.forEach(line => {
+            const li = document.createElement('li');
+            li.style.cssText = 'font-size:12.5px; margin-bottom:2px; padding-left:14px; position:relative;';
+            li.innerHTML = '<span style="position:absolute;left:0;">\u25e6</span>' + line.trim();
+            ul.appendChild(li);
+        });
+        return ul;
+    };
+
+    // ── Professional Objective ──
+    if (cvState.careerSummary) {
+        addSection('Professional Objective', (sec) => {
+            const p = document.createElement('p');
+            p.style.cssText = 'margin:0; font-size:12.5px; text-align:justify;';
+            p.textContent = cvState.careerSummary;
+            sec.appendChild(p);
+        });
+    }
+
+    // ── Education ──
+    if (cvState.education && cvState.education.length > 0) {
+        addSection('Education', (sec) => {
+            cvState.education.forEach(edu => {
+                const row = document.createElement('div');
+                row.style.marginBottom = '6px';
+                const titleLine = document.createElement('div');
+                if (edu.year) titleLine.appendChild(makeDateSpan(edu.year));
+                const degSpan = document.createElement('span');
+                degSpan.style.fontWeight = '700';
+                degSpan.textContent = edu.degree || '';
+                titleLine.appendChild(degSpan);
+                titleLine.appendChild(clearfix());
+                row.appendChild(titleLine);
+                if (edu.institution || edu.board) {
+                    const subLine = document.createElement('div');
+                    subLine.style.cssText = 'font-style:italic; color:#333; font-size:12px;';
+                    subLine.textContent = [edu.institution, edu.board].filter(Boolean).join(', ');
+                    row.appendChild(subLine);
+                }
+                if (edu.score) {
+                    const scoreLine = document.createElement('div');
+                    scoreLine.style.cssText = 'font-size:12px; color:#333;';
+                    scoreLine.textContent = 'Grade: ' + edu.score;
+                    row.appendChild(scoreLine);
+                }
+                sec.appendChild(row);
+            });
+        });
+    }
+
+    // ── Internships / Work ──
+    if (cvState.work && cvState.work.length > 0) {
+        addSection('Internships', (sec) => {
+            cvState.work.forEach(job => {
+                const block = document.createElement('div');
+                block.style.marginBottom = '10px';
+                const titleLine = document.createElement('div');
+                if (job.duration) titleLine.appendChild(makeDateSpan(job.duration));
+                const titleSpan = document.createElement('span');
+                titleSpan.style.fontWeight = '700';
+                titleSpan.textContent = job.title || '';
+                titleLine.appendChild(titleSpan);
+                titleLine.appendChild(clearfix());
+                block.appendChild(titleLine);
+                const compParts = [job.company, job.location].filter(Boolean).join(', ');
+                if (compParts) {
+                    const compLine = document.createElement('div');
+                    compLine.style.cssText = 'font-style:italic; color:#333; font-size:12px; margin-bottom:3px;';
+                    compLine.textContent = compParts + ' \u2014';
+                    block.appendChild(compLine);
+                }
+                if (job.desc) {
+                    const lines = job.desc.split('\n').filter(l => l.trim());
+                    block.appendChild(makeBulletList(lines));
+                }
+                sec.appendChild(block);
+            });
+        });
+    }
+
+    // ── Projects ──
+    if (cvState.projects && cvState.projects.length > 0) {
+        addSection('Academic & Personal Projects', (sec) => {
+            cvState.projects.forEach(proj => {
+                const block = document.createElement('div');
+                block.style.marginBottom = '8px';
+                const titleLine = document.createElement('div');
+                const titleSpan = document.createElement('span');
+                titleSpan.style.cssText = 'font-weight:700; font-size:12.5px;';
+                titleSpan.textContent = proj.name + (proj.tech ? ' \u2013 ' : '');
+                titleLine.appendChild(titleSpan);
+                if (proj.tech) {
+                    const techSpan = document.createElement('span');
+                    techSpan.style.cssText = 'font-style:italic; font-size:12px;';
+                    techSpan.textContent = proj.tech;
+                    titleLine.appendChild(techSpan);
+                }
+                block.appendChild(titleLine);
+                if (proj.desc) {
+                    const lines = proj.desc.split('\n').filter(l => l.trim());
+                    block.appendChild(makeBulletList(lines));
+                }
+                sec.appendChild(block);
+            });
+        });
+    }
+
+    // ── Certifications ──
+    if (cvState.certifications && cvState.certifications.length > 0) {
+        addSection('Certifications', (sec) => {
+            const ul = document.createElement('ul');
+            ul.style.cssText = 'margin:0; padding-left:0; list-style:none;';
+            cvState.certifications.forEach(cert => {
+                const li = document.createElement('li');
+                li.style.cssText = 'font-size:12.5px; margin-bottom:4px; padding-left:14px; position:relative;';
+                li.innerHTML = '<span style="position:absolute;left:0;">\u25e6</span><strong>' + cert + '</strong>';
+                ul.appendChild(li);
+            });
+            sec.appendChild(ul);
+        });
+    }
+
+    // ── Skills ──
+    const hasSkills = (cvState.techSkills && cvState.techSkills.length > 0) || (cvState.softSkills && cvState.softSkills.length > 0);
+    if (hasSkills) {
+        addSection('Skills', (sec) => {
+            const allSkills = [...(cvState.techSkills || []), ...(cvState.softSkills || [])];
+            const p = document.createElement('p');
+            p.style.cssText = 'margin:0; font-size:12.5px;';
+            p.textContent = allSkills.join('   \u2022   ');
+            sec.appendChild(p);
+        });
+    }
+
+    // ── Achievements ──
+    if (cvState.achievements && cvState.achievements.length > 0) {
+        addSection('Achievements', (sec) => {
+            sec.appendChild(makeBulletList(cvState.achievements));
+        });
+    }
+
+    // ── Languages & Hobbies ──
+    const hasExtra = (cvState.languages && cvState.languages.length > 0) || (cvState.hobbies && cvState.hobbies.length > 0);
+    if (hasExtra) {
+        addSection('Additional Information', (sec) => {
+            if (cvState.languages && cvState.languages.length > 0) {
+                const p = document.createElement('p');
+                p.style.cssText = 'margin:0 0 4px 0; font-size:12.5px;';
+                p.innerHTML = '<strong>Languages:</strong> ' + cvState.languages.join(', ');
+                sec.appendChild(p);
+            }
+            if (cvState.hobbies && cvState.hobbies.length > 0) {
+                const p = document.createElement('p');
+                p.style.cssText = 'margin:0; font-size:12.5px;';
+                p.innerHTML = '<strong>Interests:</strong> ' + cvState.hobbies.join(', ');
+                sec.appendChild(p);
+            }
+        });
+    }
+
+    // ── Declaration ──
+    const decl = document.createElement('div');
+    decl.style.cssText = 'margin-top:20px; font-size:12px; color:#444;';
+    decl.innerHTML = '<strong>DECLARATION</strong><br>I hereby declare that the information provided above is true and correct to the best of my knowledge and belief.';
+    container.appendChild(decl);
+}
+
 // ==========================================================================
 // IMAGE EXPORT â€” High Resolution PNG Download
 //
@@ -1602,29 +1838,39 @@ async function downloadPDF() {
             }
         });
 
-        const imageUrl = canvas.toDataURL('image/jpeg', 0.98);
         const { jsPDF } = window.jspdf;
         const pdf = new jsPDF('p', 'mm', 'a4');
 
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const imageWidth = pageWidth;
-        const imageHeight = (canvas.height * imageWidth) / canvas.width;
+        const pageWidthMM  = pdf.internal.pageSize.getWidth();   // 210mm
+        const pageHeightMM = pdf.internal.pageSize.getHeight();  // 297mm
 
-        if (imageHeight <= pageHeight) {
-            pdf.addImage(imageUrl, 'JPEG', 0, 0, imageWidth, imageHeight);
+        // How many canvas pixels equal one A4 page height?
+        // canvas.width corresponds to pageWidthMM, so:
+        const mmPerPx       = pageWidthMM / canvas.width;
+        const pageHeightPx  = Math.round(pageHeightMM / mmPerPx);
+        const totalHeightMM = canvas.height * mmPerPx;
+
+        if (totalHeightMM <= pageHeightMM) {
+            // Single page — fits entirely
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.98), 'JPEG', 0, 0, pageWidthMM, totalHeightMM);
         } else {
-            let remainingHeight = imageHeight;
-            let yPosition = 0;
+            // Multi-page: slice the canvas into A4-height strips so no text is cut in half
+            let yOffset = 0;
+            while (yOffset < canvas.height) {
+                const sliceH = Math.min(pageHeightPx, canvas.height - yOffset);
 
-            while (remainingHeight > 0) {
-                pdf.addImage(imageUrl, 'JPEG', 0, yPosition, imageWidth, imageHeight);
-                remainingHeight -= pageHeight;
-                yPosition -= pageHeight;
+                const slice = document.createElement('canvas');
+                slice.width  = canvas.width;
+                slice.height = sliceH;
+                slice.getContext('2d').drawImage(
+                    canvas,
+                    0, yOffset, canvas.width, sliceH,   // source rect
+                    0, 0,       canvas.width, sliceH    // dest rect
+                );
 
-                if (remainingHeight > 0) {
-                    pdf.addPage();
-                }
+                if (yOffset > 0) pdf.addPage();
+                pdf.addImage(slice.toDataURL('image/jpeg', 0.98), 'JPEG', 0, 0, pageWidthMM, sliceH * mmPerPx);
+                yOffset += sliceH;
             }
         }
 

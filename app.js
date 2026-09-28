@@ -1,8 +1,4 @@
-/* ==========================================================================
-   CRAFTCV APPLICATION LOGIC (VANILLA JS)
-   ========================================================================== */
 
-// --- Global Application State ---
 let cvState = {
     selectedTemplate: 'classic-executive',
     photo: '',
@@ -1783,10 +1779,7 @@ function renderAcademicTemplate(container) {
     }
 
     // ── Declaration ──
-    const decl = document.createElement('div');
-    decl.style.cssText = 'margin-top:20px; font-size:12px; color:#444;';
-    decl.innerHTML = '<strong>DECLARATION</strong><br>I hereby declare that the information provided above is true and correct to the best of my knowledge and belief.';
-    container.appendChild(decl);
+
 }
 
 // ==========================================================================

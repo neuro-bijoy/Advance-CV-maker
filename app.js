@@ -310,8 +310,15 @@ function setupPhotoHandler() {
         const file = e.target.files[0];
         if (!file) return;
 
+        if (!file.type.startsWith('image/')) {
+            alert('Invalid file type. Please upload a JPG, PNG, or other image file.');
+            photoInput.value = '';
+            return;
+        }
+
         if (file.size > 2 * 1024 * 1024) {
             alert('File is too large. Maximum size is 2MB.');
+            photoInput.value = '';
             return;
         }
 
@@ -353,26 +360,23 @@ function setupZoomControls() {
     const zoomVal = document.getElementById('zoom-percentage');
 
     const setZoom = (zoom) => {
+        if (!wrapper || !zoomVal) return;
         previewZoom = Math.max(0.4, Math.min(1.5, zoom));
         wrapper.style.transform = `scale(${previewZoom})`;
         zoomVal.innerText = `${Math.round(previewZoom * 100)}%`;
-
-        const container = document.querySelector('.preview-scroll-container');
         const docHeight = 1123 * previewZoom;
-        wrapper.parentElement.style.height = `${docHeight + 80}px`;
+        if (wrapper.parentElement) {
+            wrapper.parentElement.style.height = `${docHeight + 80}px`;
+        }
     };
 
-    document.getElementById('btn-zoom-in').addEventListener('click', () => {
-        setZoom(previewZoom + 0.1);
-    });
+    const zoomInBtn = document.getElementById('btn-zoom-in');
+    const zoomOutBtn = document.getElementById('btn-zoom-out');
+    const zoomResetBtn = document.getElementById('btn-zoom-reset');
 
-    document.getElementById('btn-zoom-out').addEventListener('click', () => {
-        setZoom(previewZoom - 0.1);
-    });
-
-    document.getElementById('btn-zoom-reset').addEventListener('click', () => {
-        setZoom(1.0);
-    });
+    if (zoomInBtn) zoomInBtn.addEventListener('click', () => { setZoom(previewZoom + 0.1); });
+    if (zoomOutBtn) zoomOutBtn.addEventListener('click', () => { setZoom(previewZoom - 0.1); });
+    if (zoomResetBtn) zoomResetBtn.addEventListener('click', () => { setZoom(1.0); });
 
     window.addEventListener('resize', fitZoomToContainer);
 }
@@ -607,6 +611,10 @@ function setupInputListeners() {
 
     textInputs.forEach(item => {
         const element = document.getElementById(item.id);
+        if (!element) {
+            console.warn(`setupInputListeners: element #${item.id} not found`);
+            return;
+        }
         element.addEventListener('input', (e) => {
             cvState[item.key] = e.target.value;
             saveStateToLocalStorage();
@@ -664,10 +672,15 @@ function populateFormFromState() {
 
     listMap.forEach(mapItem => {
         const container = document.getElementById(mapItem.id);
+        if (!container) return;
+        const savedRenderItem = container.renderItem;
         container.innerHTML = '';
+        container.renderItem = savedRenderItem;
         if (cvState[mapItem.key] && cvState[mapItem.key].length > 0) {
             cvState[mapItem.key].forEach(val => {
-                container.renderItem(val);
+                if (typeof container.renderItem === 'function') {
+                    container.renderItem(val);
+                }
             });
         }
     });
@@ -680,10 +693,15 @@ function populateFormFromState() {
 
     blockMap.forEach(mapItem => {
         const container = document.getElementById(mapItem.id);
+        if (!container) return;
+        const savedRenderBlock = container.renderBlock;
         container.innerHTML = '';
+        container.renderBlock = savedRenderBlock;
         if (cvState[mapItem.key] && cvState[mapItem.key].length > 0) {
             cvState[mapItem.key].forEach(val => {
-                container.renderBlock(val);
+                if (typeof container.renderBlock === 'function') {
+                    container.renderBlock(val);
+                }
             });
         }
     });
@@ -725,15 +743,26 @@ function clearForm() {
     document.getElementById('photo-placeholder-icon').classList.remove('hidden');
     document.getElementById('btn-remove-photo').classList.add('hidden');
 
-    document.getElementById('tech-skills-list').innerHTML = '';
-    document.getElementById('soft-skills-list').innerHTML = '';
-    document.getElementById('education-blocks').innerHTML = '';
-    document.getElementById('work-blocks').innerHTML = '';
-    document.getElementById('project-blocks').innerHTML = '';
-    document.getElementById('certifications-list').innerHTML = '';
-    document.getElementById('achievements-list').innerHTML = '';
-    document.getElementById('languages-list').innerHTML = '';
-    document.getElementById('hobbies-list').innerHTML = '';
+    // Clear innerHTML but preserve the custom renderItem/renderBlock methods
+    // that were attached by setupSimpleList() and setupBlockList()
+    const listIds = ['tech-skills-list', 'soft-skills-list', 'certifications-list', 'achievements-list', 'languages-list', 'hobbies-list'];
+    listIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const savedRenderItem = el.renderItem;
+            el.innerHTML = '';
+            el.renderItem = savedRenderItem;
+        }
+    });
+    const blockIds = ['education-blocks', 'work-blocks', 'project-blocks'];
+    blockIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const savedRenderBlock = el.renderBlock;
+            el.innerHTML = '';
+            el.renderBlock = savedRenderBlock;
+        }
+    });
 
     localStorage.removeItem('craftcv_data');
     updatePreview();
@@ -974,9 +1003,10 @@ function renderClassicTemplate(container) {
             <div class="cv-section-title"><i class="fa-solid fa-diagram-project"></i> Academic Projects</div>
         `;
         cvState.projects.forEach(proj => {
+            const ensureHttp = (url) => /^https?:\/\//i.test(url) ? url : 'https://' + url;
             let links = [];
-            if (proj.github) links.push(`GitHub: <a href="https://${proj.github}" target="_blank">${proj.github}</a>`);
-            if (proj.demo) links.push(`Live: <a href="https://${proj.demo}" target="_blank">${proj.demo}</a>`);
+            if (proj.github) links.push(`GitHub: <a href="${ensureHttp(proj.github)}" target="_blank">${proj.github}</a>`);
+            if (proj.demo) links.push(`Live: <a href="${ensureHttp(proj.demo)}" target="_blank">${proj.demo}</a>`);
             const linksStr = links.join(' | ');
 
             sec.innerHTML += `
@@ -1131,15 +1161,16 @@ function renderMinimalistTemplate(container) {
         sec.innerHTML = `<div class="cv-section-title">Academic & Personal Projects</div>`;
 
         cvState.projects.forEach(proj => {
+            const ensureHttp = (url) => /^https?:\/\//i.test(url) ? url : 'https://' + url;
             let links = [];
-            if (proj.github) links.push(`GitHub: ${proj.github}`);
-            if (proj.demo) links.push(`Demo: ${proj.demo}`);
+            if (proj.github) links.push(`GitHub: <a href="${ensureHttp(proj.github)}" target="_blank">${proj.github}</a>`);
+            if (proj.demo) links.push(`Demo: <a href="${ensureHttp(proj.demo)}" target="_blank">${proj.demo}</a>`);
             const linksStr = links.length > 0 ? ` (${links.join(', ')})` : '';
 
             sec.innerHTML += `
                 <div class="cv-item-block">
                     <div class="cv-item-header">
-                        <span>${proj.name} &ndash; <i>${proj.tech}</i></span>
+                        <span>${proj.name}${proj.tech ? ` &ndash; <i>${proj.tech}</i>` : ''}</span>
                     </div>
                     ${linksStr ? `<div class="cv-item-subheader">${linksStr}</div>` : ''}
                     ${proj.desc ? `<p class="cv-item-desc">${proj.desc}</p>` : ''}
@@ -1258,9 +1289,10 @@ function renderCreativeTemplate(container) {
         sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-terminal"></i> Key Projects</div>`;
 
         cvState.projects.forEach(proj => {
+            const ensureHttp = (url) => /^https?:\/\//i.test(url) ? url : 'https://' + url;
             let links = [];
-            if (proj.github) links.push(`<a href="https://${proj.github}" target="_blank"><i class="fa-brands fa-github"></i> Source</a>`);
-            if (proj.demo) links.push(`<a href="https://${proj.demo}" target="_blank"><i class="fa-solid fa-laptop"></i> Live</a>`);
+            if (proj.github) links.push(`<a href="${ensureHttp(proj.github)}" target="_blank"><i class="fa-brands fa-github"></i> Source</a>`);
+            if (proj.demo) links.push(`<a href="${ensureHttp(proj.demo)}" target="_blank"><i class="fa-solid fa-laptop"></i> Live</a>`);
             const linksStr = links.length > 0 ? ` &nbsp; ${links.join(' &bull; ')}` : '';
 
             sec.innerHTML += `
@@ -1349,7 +1381,7 @@ function renderCreativeTemplate(container) {
     if ((cvState.languages && cvState.languages.length > 0) || (cvState.hobbies && cvState.hobbies.length > 0)) {
         const sec = document.createElement('div');
         sec.className = 'cv-section';
-        sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-sparkles"></i> More</div>`;
+        sec.innerHTML = `<div class="cv-section-title"><i class="fa-solid fa-star"></i> More</div>`;
 
         const list = document.createElement('ul');
         list.className = 'sidebar-list';
@@ -1421,9 +1453,10 @@ function renderWarmSlateTemplate(container) {
         sec.className = 'cv-section';
         sec.innerHTML = `<div class="cv-section-title">Personal Projects</div>`;
         cvState.projects.forEach(proj => {
+            const ensureHttp = (url) => /^https?:\/\//i.test(url) ? url : 'https://' + url;
             let links = [];
-            if (proj.github) links.push(`<a href="https://${proj.github}" target="_blank" style="color:#ea580c;">GitHub</a>`);
-            if (proj.demo) links.push(`<a href="https://${proj.demo}" target="_blank" style="color:#ea580c;">Demo</a>`);
+            if (proj.github) links.push(`<a href="${ensureHttp(proj.github)}" target="_blank" style="color:#ea580c;">GitHub</a>`);
+            if (proj.demo) links.push(`<a href="${ensureHttp(proj.demo)}" target="_blank" style="color:#ea580c;">Demo</a>`);
             const linksStr = links.length > 0 ? ` &bull; ${links.join(' &bull; ')}` : '';
 
             sec.innerHTML += `
@@ -1678,7 +1711,7 @@ function renderAcademicTemplate(container) {
                 const titleLine = document.createElement('div');
                 const titleSpan = document.createElement('span');
                 titleSpan.style.cssText = 'font-weight:700; font-size:12.5px;';
-                titleSpan.textContent = proj.name + (proj.tech ? ' \u2013 ' : '');
+                titleSpan.textContent = proj.name ? (proj.tech ? proj.name + ' \u2013 ' : proj.name) : '';
                 titleLine.appendChild(titleSpan);
                 if (proj.tech) {
                     const techSpan = document.createElement('span');

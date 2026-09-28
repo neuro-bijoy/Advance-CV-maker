@@ -817,6 +817,7 @@ function updatePreview() {
     }
 
     applyFontToPreview();
+    showPageBreaks();
 }
 
 function hasContactInfo() {
@@ -1797,7 +1798,7 @@ function renderAcademicTemplate(container) {
         });
     }
 
-
+    
 }
 
 // ==========================================================================
@@ -1808,6 +1809,56 @@ function renderAcademicTemplate(container) {
 // at its natural 794px width, then restores it after download.
 // Scale of 3 gives ~2382px wide output â€” sharp on any screen or printer.
 // ==========================================================================
+// ==========================================================================
+// PAGE BREAK INDICATORS
+// ==========================================================================
+function showPageBreaks() {
+    const cvEl = document.getElementById('cv-preview-document');
+    if (!cvEl) return;
+
+    // Remove any existing page break lines
+    cvEl.querySelectorAll('.page-break-indicator').forEach(el => el.remove());
+
+    const A4_HEIGHT_PX = 1123;
+    const totalHeight = cvEl.scrollHeight;
+    const totalPages = Math.ceil(totalHeight / A4_HEIGHT_PX);
+
+    for (let page = 2; page <= totalPages; page++) {
+        const breakLine = document.createElement('div');
+        breakLine.className = 'page-break-indicator';
+        breakLine.style.cssText = `
+            position: absolute;
+            top: ${(page - 1) * A4_HEIGHT_PX}px;
+            left: 0;
+            width: 100%;
+            border-top: 2px dashed #ef4444;
+            z-index: 100;
+            pointer-events: none;
+        `;
+        const label = document.createElement('span');
+        label.style.cssText = `
+            position: absolute;
+            top: -11px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #ef4444;
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            font-family: 'Inter', sans-serif;
+        `;
+        label.textContent = `Page ${page} starts here`;
+        breakLine.appendChild(label);
+        cvEl.appendChild(breakLine);
+    }
+
+    // Make sure the CV container is position:relative for absolute children
+    cvEl.style.position = 'relative';
+}
+
 // ==========================================================================
 // FONT FAMILY & STYLE CONTROLS
 // ==========================================================================

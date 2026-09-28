@@ -1578,17 +1578,17 @@ function renderAcademicTemplate(container) {
 
     // Contact row inline with bullet separators
     const contactParts = [];
-    if (cvState.email)    contactParts.push('\u2709 ' + cvState.email);
-    if (cvState.phone)    contactParts.push('\u2706 ' + cvState.phone);
-    if (cvState.linkedin) contactParts.push('in ' + cvState.linkedin);
-    if (cvState.github)   contactParts.push(cvState.github);
+    if (cvState.email)    contactParts.push('<i class="fa-solid fa-envelope"></i> ' + cvState.email);
+    if (cvState.phone)    contactParts.push('<i class="fa-solid fa-phone"></i> ' + cvState.phone);
+    if (cvState.linkedin) contactParts.push('<i class="fa-brands fa-linkedin"></i> ' + cvState.linkedin);
+    if (cvState.github)   contactParts.push('<i class="fa-brands fa-github"></i> ' + cvState.github);
     const loc = getFormattedLocation();
-    if (loc) contactParts.push(loc);
+    if (loc) contactParts.push('<i class="fa-solid fa-location-dot"></i> ' + loc);
 
     if (contactParts.length > 0) {
         const contactRow = document.createElement('div');
         contactRow.style.cssText = 'font-size:11.5px; color:#222; font-family:"Arial",sans-serif;';
-        contactRow.textContent = contactParts.join('  \u2022  ');
+        contactRow.innerHTML = contactParts.join('  &bull;  ');
         header.appendChild(contactRow);
     }
     container.appendChild(header);
@@ -1779,7 +1779,10 @@ function renderAcademicTemplate(container) {
     }
 
     // ── Declaration ──
-
+    const decl = document.createElement('div');
+    decl.style.cssText = 'margin-top:20px; font-size:12px; color:#444;';
+    decl.innerHTML = '<strong>DECLARATION</strong><br>I hereby declare that the information provided above is true and correct to the best of my knowledge and belief.';
+    container.appendChild(decl);
 }
 
 // ==========================================================================

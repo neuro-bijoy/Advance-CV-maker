@@ -1,6 +1,12 @@
+/* ==========================================================================
+   CRAFTCV APPLICATION LOGIC (VANILLA JS)
+   ========================================================================== */
 
+// --- Global Application State ---
 let cvState = {
     selectedTemplate: 'classic-executive',
+    cvFont: "'Calibri', 'Gill Sans', sans-serif",
+    cvFontStyle: 'normal|normal',
     photo: '',
     fullName: '',
     jobTitle: '',
@@ -31,6 +37,8 @@ let previewZoom = 1.0;
 // --- Demo Data / Quick Start Data ---
 const demoData = {
     selectedTemplate: 'classic-executive',
+    cvFont: "'Calibri', 'Gill Sans', sans-serif",
+    cvFontStyle: 'normal|normal',
     photo: '',
     fullName: 'Arjun Mehta',
     jobTitle: 'Computer Science Graduate',
@@ -144,6 +152,7 @@ function initApp() {
     setupDynamicFields();
     setupInputListeners();
     setupZoomControls();
+    setupFontControls();
     setupExportHandlers();
 
     fixEditorScrollHeight();
@@ -641,6 +650,12 @@ function populateFormFromState() {
     document.getElementById('career-summary').value = cvState.careerSummary || '';
     document.getElementById('template-select').value = cvState.selectedTemplate || 'classic-executive';
 
+    const fontFamilySelect = document.getElementById('font-family-select');
+    if (fontFamilySelect) fontFamilySelect.value = cvState.cvFont || "'Calibri', 'Gill Sans', sans-serif";
+
+    const fontStyleSelect = document.getElementById('font-style-select');
+    if (fontStyleSelect) fontStyleSelect.value = cvState.cvFontStyle || 'normal|normal';
+
     const previewImg = document.getElementById('photo-preview-img');
     const placeholderIcon = document.getElementById('photo-placeholder-icon');
     const removeBtn = document.getElementById('btn-remove-photo');
@@ -706,6 +721,8 @@ function populateFormFromState() {
 function clearForm() {
     cvState = {
         selectedTemplate: 'classic-executive',
+        cvFont: "'Calibri', 'Gill Sans', sans-serif",
+        cvFontStyle: 'normal|normal',
         photo: '',
         fullName: '',
         jobTitle: '',
@@ -798,6 +815,8 @@ function updatePreview() {
             renderAcademicTemplate(previewContainer);
             break;
     }
+
+    applyFontToPreview();
 }
 
 function hasContactInfo() {
@@ -1778,7 +1797,11 @@ function renderAcademicTemplate(container) {
         });
     }
 
-
+    // ── Declaration ──
+    const decl = document.createElement('div');
+    decl.style.cssText = 'margin-top:20px; font-size:12px; color:#444;';
+    decl.innerHTML = '<strong>DECLARATION</strong><br>I hereby declare that the information provided above is true and correct to the best of my knowledge and belief.';
+    container.appendChild(decl);
 }
 
 // ==========================================================================
@@ -1789,6 +1812,46 @@ function renderAcademicTemplate(container) {
 // at its natural 794px width, then restores it after download.
 // Scale of 3 gives ~2382px wide output â€” sharp on any screen or printer.
 // ==========================================================================
+// ==========================================================================
+// FONT FAMILY & STYLE CONTROLS
+// ==========================================================================
+function setupFontControls() {
+    const fontFamilySelect = document.getElementById('font-family-select');
+    const fontStyleSelect = document.getElementById('font-style-select');
+
+    if (fontFamilySelect) {
+        fontFamilySelect.value = cvState.cvFont || "'Calibri', 'Gill Sans', sans-serif";
+        fontFamilySelect.addEventListener('change', (e) => {
+            cvState.cvFont = e.target.value;
+            saveStateToLocalStorage();
+            applyFontToPreview();
+        });
+    }
+
+    if (fontStyleSelect) {
+        fontStyleSelect.value = cvState.cvFontStyle || 'normal|normal';
+        fontStyleSelect.addEventListener('change', (e) => {
+            cvState.cvFontStyle = e.target.value;
+            saveStateToLocalStorage();
+            applyFontToPreview();
+        });
+    }
+}
+
+function applyFontToPreview() {
+    const cvEl = document.getElementById('cv-preview-document');
+    if (!cvEl) return;
+
+    const font = cvState.cvFont || "'Calibri', 'Gill Sans', sans-serif";
+    const styleParts = (cvState.cvFontStyle || 'normal|normal').split('|');
+    const fontStyle  = styleParts[0] || 'normal';
+    const fontWeight = styleParts[1] || 'normal';
+
+    cvEl.style.fontFamily = font;
+    cvEl.style.fontStyle  = fontStyle;
+    cvEl.style.fontWeight = fontWeight;
+}
+
 function setupExportHandlers() {
     const downloadBtn = document.getElementById('btn-download-pdf');
 

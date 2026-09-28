@@ -924,11 +924,13 @@ body {
 .preview-toolbar {
     background-color: var(--bg-secondary);
     border-bottom: 1px solid var(--border-color);
-    padding: 12px 24px;
+    padding: 10px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    height: 60px;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 60px;
     z-index: 10;
 }
 
@@ -936,7 +938,37 @@ body {
 .toolbar-right {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+#font-family-select,
+#font-style-select {
+    appearance: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 30px 6px 12px;
+    border-radius: 30px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    outline: none;
+    transition: all var(--transition-speed);
+}
+
+#font-family-select {
+    max-width: 150px;
+}
+
+#font-style-select {
+    max-width: 120px;
+}
+
+#font-family-select:focus,
+#font-style-select:focus {
+    border-color: var(--accent-color);
 }
 
 .preview-status {
